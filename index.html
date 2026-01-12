@@ -3,77 +3,527 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sentinel - Live Dashboard</title>
+    <title>Sentinel v5.00 | Live Trading Dashboard</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        body { font-family: 'Segoe UI', sans-serif; background: #f4f4f9; color: #333; padding: 20px; }
-        .container { max-width: 1000px; margin: 0 auto; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
-        h1 { text-align: center; color: #2c3e50; }
-        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #ddd; }
-        th { background-color: #2c3e50; color: white; }
-        tr:hover { background-color: #f1f1f1; }
-        .win { color: green; font-weight: bold; }
-        .loss { color: red; font-weight: bold; }
-        .status { text-align: center; font-size: 0.9em; color: #777; margin-bottom: 20px; }
+        :root {
+            --primary: #4361ee;
+            --primary-dark: #3a56d4;
+            --success: #06d6a0;
+            --danger: #ef476f;
+            --warning: #ffd166;
+            --dark: #1a1a2e;
+            --light: #f8f9fa;
+            --gray: #8b8ca7;
+            --card-bg: #ffffff;
+            --shadow: rgba(149, 157, 165, 0.1);
+            --gradient: linear-gradient(135deg, #4361ee 0%, #3a0ca3 100%);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #f5f7fa 0%, #e4edf5 100%);
+            color: var(--dark);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        /* Header */
+        .dashboard-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            background: var(--gradient);
+            padding: 25px 30px;
+            border-radius: 20px;
+            color: white;
+            box-shadow: 0 10px 30px rgba(67, 97, 238, 0.2);
+            animation: slideDown 0.5s ease-out;
+        }
+
+        .header-left h1 {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 5px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .header-left h1 i {
+            color: var(--warning);
+            font-size: 32px;
+        }
+
+        .header-left p {
+            font-weight: 300;
+            opacity: 0.9;
+            font-size: 15px;
+        }
+
+        .live-badge {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 8px 16px;
+            border-radius: 50px;
+            font-size: 14px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            backdrop-filter: blur(5px);
+        }
+
+        .live-badge .pulse {
+            width: 10px;
+            height: 10px;
+            background: var(--success);
+            border-radius: 50%;
+            animation: pulse 1.5s infinite;
+        }
+
+        /* Status Bar */
+        .status-bar {
+            background: var(--card-bg);
+            padding: 20px;
+            border-radius: 16px;
+            margin-bottom: 30px;
+            box-shadow: 0 5px 20px var(--shadow);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            animation: fadeIn 0.7s ease-out 0.2s both;
+        }
+
+        .update-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .update-info i {
+            color: var(--primary);
+            font-size: 22px;
+        }
+
+        .update-text {
+            font-weight: 500;
+        }
+
+        .update-time {
+            font-weight: 600;
+            color: var(--primary);
+            background: rgba(67, 97, 238, 0.1);
+            padding: 6px 12px;
+            border-radius: 8px;
+        }
+
+        .refresh-btn {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 10px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s ease;
+        }
+
+        .refresh-btn:hover {
+            background: var(--primary-dark);
+            transform: translateY(-2px);
+        }
+
+        /* Table */
+        .table-container {
+            background: var(--card-bg);
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px var(--shadow);
+            animation: fadeIn 0.8s ease-out 0.4s both;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        thead {
+            background: var(--gradient);
+        }
+
+        thead tr th {
+            padding: 20px 25px;
+            text-align: left;
+            color: white;
+            font-weight: 600;
+            font-size: 16px;
+            position: relative;
+        }
+
+        thead tr th:not(:last-child):after {
+            content: '';
+            position: absolute;
+            right: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            height: 60%;
+            width: 1px;
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        tbody tr {
+            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+            transition: all 0.3s ease;
+        }
+
+        tbody tr:hover {
+            background: rgba(67, 97, 238, 0.03);
+            transform: scale(1.005);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.03);
+        }
+
+        tbody tr td {
+            padding: 18px 25px;
+            font-size: 15px;
+        }
+
+        .symbol {
+            font-weight: 700;
+            color: var(--dark);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .type-badge {
+            padding: 5px 12px;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        .type-buy {
+            background: rgba(6, 214, 160, 0.15);
+            color: var(--success);
+        }
+
+        .type-sell {
+            background: rgba(239, 71, 111, 0.15);
+            color: var(--danger);
+        }
+
+        .profit-positive {
+            color: var(--success);
+            font-weight: 700;
+            background: rgba(6, 214, 160, 0.1);
+            padding: 8px 15px;
+            border-radius: 8px;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .profit-negative {
+            color: var(--danger);
+            font-weight: 700;
+            background: rgba(239, 71, 111, 0.1);
+            padding: 8px 15px;
+            border-radius: 8px;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .result-badge {
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .result-win {
+            background: rgba(6, 214, 160, 0.15);
+            color: var(--success);
+        }
+
+        .result-loss {
+            background: rgba(239, 71, 111, 0.15);
+            color: var(--danger);
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--gray);
+        }
+
+        .empty-state i {
+            font-size: 48px;
+            margin-bottom: 20px;
+            color: var(--gray);
+            opacity: 0.5;
+        }
+
+        /* Footer */
+        .dashboard-footer {
+            text-align: center;
+            margin-top: 40px;
+            color: var(--gray);
+            font-size: 14px;
+            padding: 20px;
+            animation: fadeIn 1s ease-out 0.6s both;
+        }
+
+        /* Animations */
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(6, 214, 160, 0.7); }
+            70% { box-shadow: 0 0 0 10px rgba(6, 214, 160, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(6, 214, 160, 0); }
+        }
+
+        @keyframes fadeInRow {
+            from { opacity: 0; transform: translateX(-10px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .dashboard-header {
+                flex-direction: column;
+                gap: 20px;
+                text-align: center;
+            }
+            .status-bar {
+                flex-direction: column;
+                gap: 20px;
+            }
+            thead { display: none; }
+            tbody tr {
+                display: block;
+                margin-bottom: 20px;
+                border: 1px solid rgba(0, 0, 0, 0.05);
+                border-radius: 12px;
+                padding: 15px;
+            }
+            tbody tr td {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                padding: 10px 0;
+                border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+            }
+            tbody tr td:last-child { border-bottom: none; }
+            tbody tr td:before {
+                content: attr(data-label);
+                font-weight: 600;
+                color: var(--gray);
+            }
+        }
     </style>
 </head>
 <body>
+    <div class="container">
+        <header class="dashboard-header">
+            <div class="header-left">
+                <h1><i class="fas fa-shield-alt"></i> Sentinel v5.00</h1>
+                <p>Live Trading Performance Dashboard</p>
+            </div>
+            <div class="live-badge">
+                <div class="pulse"></div>
+                <span>LIVE DATA STREAMING</span>
+            </div>
+        </header>
 
-<div class="container">
-    <h1>Sentinel v5.00 Results</h1>
-    <div class="status" id="last-update">Loading data...</div>
-    <table id="trade-table">
-        <thead>
-            <tr>
-                <th>Time</th>
-                <th>Symbol</th>
-                <th>Type</th>
-                <th>Price</th>
-                <th>Profit ($)</th>
-                <th>Result</th>
-            </tr>
-        </thead>
-        <tbody>
-            </tbody>
-    </table>
-</div>
+        <div class="status-bar">
+            <div class="update-info">
+                <i class="fas fa-clock"></i>
+                <div>
+                    <div class="update-text">Last Updated</div>
+                    <div class="update-time" id="last-update">Loading data...</div>
+                </div>
+            </div>
+            <button class="refresh-btn" onclick="loadData()">
+                <i class="fas fa-sync-alt"></i> Refresh Data
+            </button>
+        </div>
 
-<script>
-    async function loadData() {
-        // Prevent caching so we always get the latest version
-        const response = await fetch('BEAN_TradeCloseLog.csv?t=' + new Date().getTime());
-        const data = await response.text();
-        
-        const table = document.querySelector('#trade-table tbody');
-        const rows = data.split('\n').slice(1); // Skip header row
-        
-        // Reverse rows to show newest first
-        rows.reverse().forEach(row => {
-            const cols = row.split(',');
-            if (cols.length < 8) return; // Skip empty lines
+        <div class="table-container">
+            <table id="trade-table">
+                <thead>
+                    <tr>
+                        <th><i class="far fa-clock"></i> Time</th>
+                        <th><i class="fas fa-chart-line"></i> Symbol</th>
+                        <th><i class="fas fa-exchange-alt"></i> Type</th>
+                        <th><i class="fas fa-tag"></i> Price</th>
+                        <th><i class="fas fa-coins"></i> Profit ($)</th>
+                        <th><i class="fas fa-poll"></i> Result</th>
+                    </tr>
+                </thead>
+                <tbody id="table-body">
+                    <tr class="empty-state-row">
+                        <td colspan="6">
+                            <div class="empty-state">
+                                <i class="fas fa-database"></i>
+                                <h3>Loading trade data...</h3>
+                                <p>Fetching latest trading records from the server</p>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
 
-            // CSV Columns: ExitTime, Symbol, Direction, Lot, EntryPrice, ExitPrice, NetProfit, Result...
-            const tr = document.createElement('tr');
+        <footer class="dashboard-footer">
+            <p>© 2025 Sentinel Trading System • Real-time monitoring dashboard</p>
+            <p>Data updates automatically every 30 seconds</p>
+        </footer>
+    </div>
+
+    <script>
+        async function loadData() {
+            const refreshBtn = document.querySelector('.refresh-btn');
+            const originalText = refreshBtn.innerHTML;
             
-            // Format Profit Color
-            const profitClass = parseFloat(cols[6]) >= 0 ? 'win' : 'loss';
+            // Show loading state
+            refreshBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Refreshing...';
+            refreshBtn.disabled = true;
+            
+            try {
+                // Prevent caching so we always get the latest version
+                const response = await fetch('BEAN_TradeCloseLog.csv?t=' + new Date().getTime());
+                const data = await response.text();
+                
+                const tableBody = document.getElementById('table-body');
+                const rows = data.split('\n').slice(1); // Skip header row
+                
+                // Clear existing rows
+                tableBody.innerHTML = '';
+                
+                // Filter out empty rows
+                const validRows = rows.filter(r => r.trim() !== '' && r.split(',').length >= 8);
 
-            tr.innerHTML = `
-                <td>${cols[0]}</td>
-                <td><strong>${cols[1]}</strong></td>
-                <td>${cols[2]}</td>
-                <td>${cols[5]}</td>
-                <td class="${profitClass}">${cols[6]}</td>
-                <td>${cols[7]}</td>
-            `;
-            table.appendChild(tr);
-        });
+                if (validRows.length === 0) {
+                    // Show empty state
+                    tableBody.innerHTML = `
+                        <tr class="empty-state-row">
+                            <td colspan="6">
+                                <div class="empty-state">
+                                    <i class="fas fa-inbox"></i>
+                                    <h3>No trades found</h3>
+                                    <p>No trading data is available at the moment</p>
+                                </div>
+                            </td>
+                        </tr>
+                    `;
+                } else {
+                    // Reverse rows to show newest first
+                    validRows.reverse().forEach((row, index) => {
+                        const cols = row.split(',');
+
+                        // CSV Columns: ExitTime, Symbol, Direction, Lot, EntryPrice, ExitPrice, NetProfit, Result...
+                        const tr = document.createElement('tr');
+                        tr.style.animation = `fadeInRow 0.5s ease-out ${index * 0.05}s both`;
+                        
+                        // Determine type and result styling
+                        const typeClass = cols[2].toLowerCase().includes('buy') ? 'type-buy' : 'type-sell';
+                        const profit = parseFloat(cols[6]);
+                        const profitClass = profit >= 0 ? 'profit-positive' : 'profit-negative';
+                        const profitIcon = profit >= 0 ? '<i class="fas fa-arrow-up"></i>' : '<i class="fas fa-arrow-down"></i>';
+                        const resultClass = cols[7].toLowerCase().includes('profit') ? 'result-win' : 'result-loss';
+                        
+                        // --- FIX: SAFE DATE PARSING (MQL5 "YYYY.MM.DD" -> ISO "YYYY-MM-DD") ---
+                        const rawTime = cols[0];
+                        const safeTimeStr = rawTime.replace(/\./g, '-'); // Replace dots with hyphens
+                        const dateObj = new Date(safeTimeStr);
+                        
+                        const formattedTime = !isNaN(dateObj) 
+                            ? dateObj.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})
+                            : rawTime; // Fallback to raw string if parsing fails
+                        
+                        tr.innerHTML = `
+                            <td data-label="Time">${formattedTime}</td>
+                            <td data-label="Symbol">
+                                <div class="symbol">
+                                    <i class="fas fa-chart-line"></i>
+                                    ${cols[1]}
+                                </div>
+                            </td>
+                            <td data-label="Type"><span class="type-badge ${typeClass}">${cols[2]}</span></td>
+                            <td data-label="Price"><strong>${parseFloat(cols[5]).toFixed(5)}</strong></td>
+                            <td data-label="Profit">
+                                <span class="${profitClass}">
+                                    ${profitIcon}
+                                    ${profit >= 0 ? '+' : ''}${profit.toFixed(2)}
+                                </span>
+                            </td>
+                            <td data-label="Result"><span class="result-badge ${resultClass}">${cols[7]}</span></td>
+                        `;
+                        tableBody.appendChild(tr);
+                    });
+                }
+                
+                // Update timestamp
+                const now = new Date();
+                document.getElementById('last-update').innerText = now.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit', second:'2-digit'});
+                
+                // Visual feedback
+                document.querySelector('.update-time').style.backgroundColor = 'rgba(6, 214, 160, 0.2)';
+                setTimeout(() => {
+                    document.querySelector('.update-time').style.backgroundColor = 'rgba(67, 97, 238, 0.1)';
+                }, 1000);
+                
+            } catch (error) {
+                console.error('Error loading data:', error);
+                const tableBody = document.getElementById('table-body');
+                tableBody.innerHTML = `
+                    <tr class="empty-state-row">
+                        <td colspan="6">
+                            <div class="empty-state">
+                                <i class="fas fa-exclamation-triangle"></i>
+                                <h3>Failed to load data</h3>
+                                <p>Please check your connection and try again</p>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+                document.getElementById('last-update').innerText = "Update failed";
+            } finally {
+                refreshBtn.innerHTML = originalText;
+                refreshBtn.disabled = false;
+            }
+        }
+
+        // Load data on page load
+        document.addEventListener('DOMContentLoaded', loadData);
         
-        document.getElementById('last-update').innerText = "Last Updated: " + new Date().toLocaleString();
-    }
-
-    loadData();
-</script>
-
+        // Auto-refresh every 30 seconds
+        setInterval(loadData, 30000);
+    </script>
 </body>
 </html>
