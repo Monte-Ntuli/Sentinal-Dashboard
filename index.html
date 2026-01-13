@@ -8,6 +8,9 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
+    <!-- Calendar CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+
     <!-- Favicon & Fonts -->
     <link rel="icon" type="image/png" href="favicon.png" />
     <link rel="icon" href="favicon.png" />
@@ -25,6 +28,7 @@
             --shadow: rgba(149, 157, 165, 0.1);
             --gradient: linear-gradient(135deg, #4361ee 0%, #3a0ca3 100%);
             --ai-gradient: linear-gradient(135deg, #7b2ff7 0%, #f72585 100%);
+            --calendar-gradient: linear-gradient(135deg, #4cc9f0 0%, #4361ee 100%);
         }
 
         * {
@@ -215,6 +219,206 @@
             color: var(--danger);
         }
 
+        /* Calendar Section */
+        .calendar-section {
+            background: var(--card-bg);
+            border-radius: 20px;
+            padding: 25px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 30px var(--shadow);
+            animation: fadeIn 0.8s ease-out 0.4s both;
+        }
+
+        .calendar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid rgba(67, 97, 238, 0.1);
+        }
+
+        .calendar-header h2 {
+            font-size: 22px;
+            font-weight: 700;
+            color: var(--dark);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .calendar-header h2 i {
+            color: #4cc9f0;
+        }
+
+        .period-selector {
+            display: flex;
+            gap: 10px;
+            background: rgba(67, 97, 238, 0.08);
+            padding: 8px;
+            border-radius: 12px;
+        }
+
+        .period-btn {
+            padding: 10px 20px;
+            border: none;
+            background: transparent;
+            color: var(--gray);
+            font-weight: 600;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .period-btn.active {
+            background: var(--primary);
+            color: white;
+            box-shadow: 0 4px 12px rgba(67, 97, 238, 0.3);
+        }
+
+        .period-btn:hover:not(.active) {
+            background: rgba(67, 97, 238, 0.1);
+        }
+
+        .calendar-container {
+            display: grid;
+            grid-template-columns: 300px 1fr;
+            gap: 30px;
+        }
+
+        .date-picker-container {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            padding: 20px;
+            border-radius: 16px;
+            border: 1px solid rgba(0, 0, 0, 0.05);
+        }
+
+        .flatpickr-calendar {
+            width: 100% !important;
+            box-shadow: none !important;
+            border: none !important;
+        }
+
+        .flatpickr-day.selected {
+            background: var(--primary) !important;
+            border-color: var(--primary) !important;
+        }
+
+        .flatpickr-day.today {
+            border: 2px solid var(--primary) !important;
+        }
+
+        .period-summary {
+            background: var(--card-bg);
+            border-radius: 16px;
+            padding: 25px;
+            margin-top: 20px;
+            border: 1px solid rgba(0, 0, 0, 0.05);
+        }
+
+        .summary-stats {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+            margin-bottom: 25px;
+        }
+
+        .summary-stat {
+            text-align: center;
+            padding: 20px;
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border-radius: 12px;
+            border: 1px solid rgba(0, 0, 0, 0.05);
+        }
+
+        .summary-stat .value {
+            font-size: 32px;
+            font-weight: 800;
+            margin-bottom: 5px;
+        }
+
+        .summary-stat .label {
+            font-size: 14px;
+            color: var(--gray);
+            font-weight: 500;
+        }
+
+        .period-trades {
+            margin-top: 20px;
+        }
+
+        .trades-list {
+            max-height: 400px;
+            overflow-y: auto;
+            border-radius: 12px;
+            border: 1px solid rgba(0, 0, 0, 0.05);
+        }
+
+        .trade-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 20px;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+            transition: background 0.3s ease;
+        }
+
+        .trade-item:hover {
+            background: rgba(67, 97, 238, 0.03);
+        }
+
+        .trade-item:last-child {
+            border-bottom: none;
+        }
+
+        .trade-info {
+            flex: 1;
+        }
+
+        .trade-symbol {
+            font-weight: 700;
+            font-size: 16px;
+            color: var(--dark);
+            margin-bottom: 5px;
+        }
+
+        .trade-meta {
+            display: flex;
+            gap: 15px;
+            font-size: 13px;
+            color: var(--gray);
+        }
+
+        .trade-profit {
+            font-weight: 700;
+            font-size: 18px;
+            padding: 8px 16px;
+            border-radius: 8px;
+            text-align: right;
+        }
+
+        .profit-positive {
+            color: var(--success);
+            background: rgba(6, 214, 160, 0.1);
+        }
+
+        .profit-negative {
+            color: var(--danger);
+            background: rgba(239, 71, 111, 0.1);
+        }
+
+        .no-trades {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--gray);
+        }
+
+        .no-trades i {
+            font-size: 48px;
+            margin-bottom: 15px;
+            opacity: 0.5;
+        }
+
         /* Status Bar */
         .status-bar {
             background: var(--card-bg);
@@ -226,28 +430,6 @@
             justify-content: space-between;
             align-items: center;
             animation: fadeIn 0.7s ease-out 0.2s both;
-        }
-
-        .strength-meter-container {
-            margin-top: 15px;
-            background: rgba(0, 0, 0, 0.05);
-            border-radius: 10px;
-            padding: 10px;
-        }
-
-        .strength-bar-bg {
-            background: #e9ecef;
-            height: 8px;
-            border-radius: 4px;
-            margin-top: 5px;
-            overflow: hidden;
-        }
-
-        #strength-bar-fill {
-            height: 100%;
-            width: 0%;
-            /* Will be updated by JS */
-            transition: width 0.8s ease-in-out;
         }
 
         .update-info {
@@ -624,6 +806,16 @@
         }
 
         /* Responsive */
+        @media (max-width: 1024px) {
+            .calendar-container {
+                grid-template-columns: 1fr;
+            }
+
+            .summary-stats {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
         @media (max-width: 768px) {
             .dashboard-header {
                 flex-direction: column;
@@ -646,6 +838,14 @@
             }
 
             .signal-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .period-selector {
+                flex-wrap: wrap;
+            }
+
+            .summary-stats {
                 grid-template-columns: 1fr;
             }
 
@@ -745,6 +945,85 @@
                     <h3>ACTIVE SIGNALS</h3>
                     <div class="metric-value" id="active-signals">0</div>
                     <div class="metric-change positive" id="signals-trend">Live</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Calendar Section -->
+        <div class="calendar-section">
+            <div class="calendar-header">
+                <h2><i class="fas fa-calendar-alt"></i> Trading Journal & Calendar</h2>
+                <div class="period-selector">
+                    <button class="period-btn active" onclick="setPeriod('day')">Day</button>
+                    <button class="period-btn" onclick="setPeriod('week')">Week</button>
+                    <button class="period-btn" onclick="setPeriod('month')">Month</button>
+                    <button class="period-btn" onclick="setPeriod('all')">All Time</button>
+                </div>
+            </div>
+
+            <div class="calendar-container">
+                <div class="date-picker-container">
+                    <h3 style="margin-bottom: 15px; color: var(--dark); font-weight: 600;">
+                        <i class="far fa-calendar"></i> Select Date Range
+                    </h3>
+                    <input type="text" id="date-range-picker" placeholder="Select date range..."
+                        style="width: 100%; padding: 12px; border-radius: 10px; border: 1px solid rgba(0,0,0,0.1); margin-bottom: 20px;">
+
+                    <div class="period-summary">
+                        <div style="margin-bottom: 15px;">
+                            <h4 style="color: var(--dark); font-weight: 600; margin-bottom: 5px;">
+                                <i class="fas fa-filter"></i> Selected Period
+                            </h4>
+                            <p id="selected-period" style="color: var(--gray); font-size: 14px;">Today</p>
+                        </div>
+
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <div>
+                                <div style="font-size: 12px; color: var(--gray);">Period Performance</div>
+                                <div id="period-pnl" style="font-size: 24px; font-weight: 800; color: var(--success);">
+                                    $0.00</div>
+                            </div>
+                            <div style="text-align: right;">
+                                <div style="font-size: 12px; color: var(--gray);">Win Rate</div>
+                                <div id="period-win-rate"
+                                    style="font-size: 24px; font-weight: 800; color: var(--primary);">0%</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div>
+                    <div class="summary-stats">
+                        <div class="summary-stat">
+                            <div class="value" id="period-total-trades">0</div>
+                            <div class="label">Total Trades</div>
+                        </div>
+                        <div class="summary-stat">
+                            <div class="value" id="period-total-profit" style="color: var(--success);">$0.00</div>
+                            <div class="label">Total Profit</div>
+                        </div>
+                        <div class="summary-stat">
+                            <div class="value" id="period-winning-trades">0</div>
+                            <div class="label">Winning Trades</div>
+                        </div>
+                        <div class="summary-stat">
+                            <div class="value" id="period-average-profit">$0.00</div>
+                            <div class="label">Avg Profit/Trade</div>
+                        </div>
+                    </div>
+
+                    <div class="period-trades">
+                        <h3 style="margin-bottom: 15px; color: var(--dark); font-weight: 600;">
+                            <i class="fas fa-list"></i> Trades in Selected Period
+                        </h3>
+                        <div class="trades-list" id="period-trades-list">
+                            <div class="no-trades">
+                                <i class="fas fa-chart-bar"></i>
+                                <h4>No trades in selected period</h4>
+                                <p>Select a date range to view trades</p>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -863,13 +1142,188 @@
         </footer>
     </div>
 
+    <!-- Calendar Library -->
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+
     <script>
-        // Global state for metrics
+        // Global state for metrics and calendar
         let previousMetrics = {
             totalTrades: 0,
             totalProfit: 0,
             accuracy: 0
         };
+
+        let allTrades = [];
+        let currentPeriod = 'day';
+        let dateRangePicker;
+
+        // Initialize calendar
+        document.addEventListener('DOMContentLoaded', function () {
+            dateRangePicker = flatpickr("#date-range-picker", {
+                mode: "range",
+                dateFormat: "Y-m-d",
+                defaultDate: "today",
+                onChange: function (selectedDates, dateStr, instance) {
+                    if (selectedDates.length === 2) {
+                        updateCalendarTrades(selectedDates[0], selectedDates[1]);
+                    }
+                }
+            });
+
+            // Set default to today
+            const today = new Date();
+            dateRangePicker.setDate([today, today]);
+
+            loadData();
+        });
+
+        function setPeriod(period) {
+            currentPeriod = period;
+
+            // Update active button
+            document.querySelectorAll('.period-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+
+            // Update date picker based on period
+            const today = new Date();
+            let startDate, endDate;
+
+            switch (period) {
+                case 'day':
+                    startDate = today;
+                    endDate = today;
+                    document.getElementById('selected-period').textContent = 'Today';
+                    break;
+                case 'week':
+                    startDate = new Date(today);
+                    startDate.setDate(today.getDate() - today.getDay()); // Start of week (Sunday)
+                    endDate = new Date(today);
+                    endDate.setDate(today.getDate() + (6 - today.getDay())); // End of week (Saturday)
+                    document.getElementById('selected-period').textContent = 'This Week';
+                    break;
+                case 'month':
+                    startDate = new Date(today.getFullYear(), today.getMonth(), 1);
+                    endDate = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+                    document.getElementById('selected-period').textContent = 'This Month';
+                    break;
+                case 'all':
+                    startDate = new Date(2000, 0, 1); // Far past date
+                    endDate = new Date(2100, 0, 1); // Far future date
+                    document.getElementById('selected-period').textContent = 'All Time';
+                    break;
+            }
+
+            dateRangePicker.setDate([startDate, endDate]);
+            updateCalendarTrades(startDate, endDate);
+        }
+
+        function updateCalendarTrades(startDate, endDate) {
+            if (allTrades.length === 0) return;
+
+            // Filter trades within date range
+            const filteredTrades = allTrades.filter(trade => {
+                const tradeDate = new Date(trade.exitTime);
+                return tradeDate >= startDate && tradeDate <= endDate;
+            });
+
+            // Calculate period statistics
+            let totalProfit = 0;
+            let winningTrades = 0;
+            let losingTrades = 0;
+
+            filteredTrades.forEach(trade => {
+                totalProfit += trade.profit;
+                if (trade.profit > 0) winningTrades++;
+                else losingTrades++;
+            });
+
+            const totalTrades = filteredTrades.length;
+            const winRate = totalTrades > 0 ? Math.round((winningTrades / totalTrades) * 100) : 0;
+            const avgProfit = totalTrades > 0 ? totalProfit / totalTrades : 0;
+
+            // Update period summary
+            document.getElementById('period-total-trades').textContent = totalTrades;
+            document.getElementById('period-total-profit').textContent = `$${totalProfit.toFixed(2)}`;
+            document.getElementById('period-total-profit').style.color = totalProfit >= 0 ? 'var(--success)' : 'var(--danger)';
+            document.getElementById('period-winning-trades').textContent = winningTrades;
+            document.getElementById('period-average-profit').textContent = `$${avgProfit.toFixed(2)}`;
+            document.getElementById('period-average-profit').style.color = avgProfit >= 0 ? 'var(--success)' : 'var(--danger)';
+
+            // Update period PnL and win rate
+            const pnlElement = document.getElementById('period-pnl');
+            pnlElement.textContent = `$${totalProfit.toFixed(2)}`;
+            pnlElement.style.color = totalProfit >= 0 ? 'var(--success)' : 'var(--danger)';
+
+            document.getElementById('period-win-rate').textContent = `${winRate}%`;
+            document.getElementById('period-win-rate').style.color =
+                winRate >= 70 ? 'var(--success)' : winRate >= 50 ? 'var(--warning)' : 'var(--danger)';
+
+            // Update trades list
+            const tradesList = document.getElementById('period-trades-list');
+
+            if (filteredTrades.length === 0) {
+                tradesList.innerHTML = `
+                    <div class="no-trades">
+                        <i class="fas fa-chart-bar"></i>
+                        <h4>No trades in selected period</h4>
+                        <p>Select a different date range to view trades</p>
+                    </div>
+                `;
+                return;
+            }
+
+            // Sort trades by date (newest first)
+            const sortedTrades = [...filteredTrades].sort((a, b) =>
+                new Date(b.exitTime) - new Date(a.exitTime)
+            );
+
+            let tradesHTML = '';
+            sortedTrades.forEach(trade => {
+                const tradeDate = new Date(trade.exitTime);
+                const formattedTime = tradeDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                const formattedDate = tradeDate.toLocaleDateString();
+
+                tradesHTML += `
+                    <div class="trade-item">
+                        <div class="trade-info">
+                            <div class="trade-symbol">
+                                ${trade.symbol} • ${trade.direction}
+                                <span style="font-size: 12px; color: var(--gray); font-weight: normal; margin-left: 10px;">
+                                    ${formattedDate} ${formattedTime}
+                                </span>
+                            </div>
+                            <div class="trade-meta">
+                                <span>Entry: ${parseFloat(trade.entryPrice).toFixed(5)}</span>
+                                <span>Exit: ${parseFloat(trade.exitPrice).toFixed(5)}</span>
+                                <span>Lot: ${trade.lot}</span>
+                            </div>
+                        </div>
+                        <div class="trade-profit ${trade.profit >= 0 ? 'profit-positive' : 'profit-negative'}">
+                            ${trade.profit >= 0 ? '+' : ''}$${trade.profit.toFixed(2)}
+                        </div>
+                    </div>
+                `;
+            });
+
+            tradesList.innerHTML = tradesHTML;
+
+            // Update period display
+            const formatDate = (date) => date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+
+            if (currentPeriod === 'day') {
+                document.getElementById('selected-period').textContent =
+                    `Today (${formatDate(startDate)})`;
+            } else if (currentPeriod === 'week' || currentPeriod === 'month' || currentPeriod === 'all') {
+                if (startDate.toDateString() === endDate.toDateString()) {
+                    document.getElementById('selected-period').textContent = formatDate(startDate);
+                } else {
+                    document.getElementById('selected-period').textContent =
+                        `${formatDate(startDate)} - ${formatDate(endDate)}`;
+                }
+            }
+        }
 
         async function loadData() {
             const refreshBtn = document.querySelector('.refresh-btn');
@@ -923,12 +1377,30 @@
             const rows = data.split('\n').slice(1).filter(r => r.trim() !== '');
             const tableBody = document.getElementById('table-body');
 
+            // Store all trades for calendar
+            allTrades = [];
+
             // Calculate metrics
             let totalProfit = 0;
             let winningTrades = 0;
 
             rows.forEach(row => {
-                const profit = parseFloat(row.split(',')[6]) || 0;
+                const cols = row.split(',');
+                const profit = parseFloat(cols[6]) || 0;
+
+                // Store trade for calendar
+                const trade = {
+                    exitTime: cols[0].replace(/\./g, '-'), // Convert date format
+                    symbol: cols[1],
+                    direction: cols[2],
+                    lot: cols[3],
+                    entryPrice: cols[4],
+                    exitPrice: cols[5],
+                    profit: profit,
+                    result: cols[7]
+                };
+                allTrades.push(trade);
+
                 totalProfit += profit;
                 if (profit > 0) winningTrades++;
             });
@@ -974,48 +1446,54 @@
             }
 
             // Show latest 50 trades
-            const latestTrades = rows.slice(-50).reverse();
+            const latestTrades = allTrades.slice(-50).reverse();
 
-            latestTrades.forEach((row, index) => {
-                const cols = row.split(',');
+            latestTrades.forEach((trade, index) => {
                 const tr = document.createElement('tr');
                 tr.style.animation = `fadeInRow 0.5s ease-out ${index * 0.02}s both`;
 
-                const typeClass = cols[2].toLowerCase().includes('buy') ? 'type-buy' : 'type-sell';
-                const profit = parseFloat(cols[6]) || 0;
-                const profitClass = profit >= 0 ? 'profit-positive' : 'profit-negative';
-                const profitIcon = profit >= 0 ? '<i class="fas fa-arrow-up"></i>' : '<i class="fas fa-arrow-down"></i>';
-                const resultClass = profit >= 0 ? 'result-win' : 'result-loss';
-                const resultText = profit >= 0 ? 'PROFIT' : 'LOSS';
+                const typeClass = trade.direction.toLowerCase().includes('buy') ? 'type-buy' : 'type-sell';
+                const profitClass = trade.profit >= 0 ? 'profit-positive' : 'profit-negative';
+                const profitIcon = trade.profit >= 0 ? '<i class="fas fa-arrow-up"></i>' : '<i class="fas fa-arrow-down"></i>';
+                const resultClass = trade.profit >= 0 ? 'result-win' : 'result-loss';
+                const resultText = trade.profit >= 0 ? 'PROFIT' : 'LOSS';
 
                 // Format time
-                const rawTime = cols[0];
-                const safeTimeStr = rawTime.replace(/\./g, '-');
-                const dateObj = new Date(safeTimeStr);
-                const formattedTime = !isNaN(dateObj) ?
-                    dateObj.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) :
-                    rawTime.split(' ')[1] || rawTime;
+                const tradeDate = new Date(trade.exitTime);
+                const formattedTime = !isNaN(tradeDate) ?
+                    tradeDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) :
+                    trade.exitTime.split(' ')[1] || trade.exitTime;
 
                 tr.innerHTML = `
                     <td data-label="Time">${formattedTime}</td>
                     <td data-label="Symbol">
                         <div class="symbol">
                             <i class="fas fa-chart-line"></i>
-                            ${cols[1]}
+                            ${trade.symbol}
                         </div>
                     </td>
-                    <td data-label="Type"><span class="type-badge ${typeClass}">${cols[2]}</span></td>
-                    <td data-label="Price"><strong>${parseFloat(cols[5] || 0).toFixed(5)}</strong></td>
+                    <td data-label="Type"><span class="type-badge ${typeClass}">${trade.direction}</span></td>
+                    <td data-label="Price"><strong>${parseFloat(trade.exitPrice || 0).toFixed(5)}</strong></td>
                     <td data-label="Profit">
                         <span class="${profitClass}">
                             ${profitIcon}
-                            ${profit >= 0 ? '+' : ''}${profit.toFixed(2)}
+                            ${trade.profit >= 0 ? '+' : ''}${trade.profit.toFixed(2)}
                         </span>
                     </td>
                     <td data-label="Result"><span class="result-badge ${resultClass}">${resultText}</span></td>
                 `;
                 tableBody.appendChild(tr);
             });
+
+            // Update calendar with current period
+            const dates = dateRangePicker.selectedDates;
+            if (dates.length === 2) {
+                updateCalendarTrades(dates[0], dates[1]);
+            } else {
+                // Default to today
+                const today = new Date();
+                updateCalendarTrades(today, today);
+            }
         }
 
         function processSignalData(data) {
@@ -1085,7 +1563,7 @@
                     historyBody.appendChild(row);
                 });
 
-                // Calculate accuracy if we have both trades and signals
+                // Calculate accuracy
                 calculateAccuracy();
             } else {
                 activeAlert.style.display = 'none';
@@ -1105,29 +1583,28 @@
         }
 
         function calculateAccuracy() {
-            const tradeRows = document.querySelectorAll('#table-body tr:not(.empty-state-row)');
-            const total = tradeRows.length;
-
-            if (total === 0) return;
+            // Count actual wins vs losses in the visible trade table
+            const rows = document.querySelectorAll('#table-body tr:not(.empty-state-row)');
+            if (rows.length === 0) return;
 
             let wins = 0;
-            tradeRows.forEach(row => {
-                if (row.innerHTML.includes('result-win')) wins++;
+            rows.forEach(row => {
+                if (row.innerHTML.includes('result-win') || row.innerHTML.includes('PROFIT')) {
+                    wins++;
+                }
             });
 
-            const rate = Math.round((wins / total) * 100);
+            const rate = Math.round((wins / rows.length) * 100);
             const accuracyElement = document.getElementById('accuracy-value');
 
-            // Update the UI
             accuracyElement.textContent = rate + '%';
 
-            // Color coding
+            // Dynamic Colors
             if (rate >= 65) accuracyElement.style.color = "var(--success)";
             else if (rate >= 50) accuracyElement.style.color = "var(--warning)";
             else accuracyElement.style.color = "var(--danger)";
 
-            // Update metric change text
-            document.getElementById('accuracy-trend').textContent = `Based on ${total} trades`;
+            document.getElementById('accuracy-trend').textContent = `Based on last ${rows.length} trades`;
         }
 
         function showErrorState() {
@@ -1145,9 +1622,6 @@
             `;
             document.getElementById('last-update').innerText = "Update failed";
         }
-
-        // Load data on page load
-        document.addEventListener('DOMContentLoaded', loadData);
 
         // Auto-refresh every 30 seconds
         setInterval(loadData, 30000);
