@@ -712,6 +712,45 @@
             color: var(--danger);
         }
 
+        .pagination-controls {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 8px;
+            padding: 20px 0;
+        }
+
+        .pagination-btn {
+            padding: 10px 15px;
+            border: 1px solid rgba(0,0,0,0.1);
+            background: var(--card-bg);
+            color: var(--primary);
+            font-weight: 600;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .pagination-btn:hover:not(:disabled) {
+            background: var(--primary-dark);
+            color: white;
+            border-color: var(--primary-dark);
+        }
+
+        .pagination-btn.active {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+            box-shadow: 0 4px 12px rgba(67, 97, 238, 0.3);
+        }
+
+        .pagination-btn:disabled {
+            background: #f1f3f5;
+            color: #adb5bd;
+            cursor: not-allowed;
+            border-color: #dee2e6;
+        }
+
         .confidence-badge {
             padding: 4px 10px;
             border-radius: 6px;
@@ -1079,8 +1118,8 @@
         <!-- Trade History Section -->
         <div class="section-header">
             <h2><i class="fas fa-history"></i> Recent Trade History</h2>
-            <div style="font-size: 14px; color: var(--gray);">
-                <i class="fas fa-info-circle"></i> Showing latest 50 trades
+            <div style="font-size: 14px; color: var(--gray);" id="trade-history-info">
+                <i class="fas fa-info-circle"></i> Loading trades...
             </div>
         </div>
 
@@ -1109,6 +1148,9 @@
                 </tbody>
             </table>
         </div>
+
+        <!-- Pagination Controls -->
+        <div id="pagination-container" class="pagination-controls"></div>
 
         <!-- AI Signals Section -->
         <div class="section-header">
@@ -1156,6 +1198,10 @@
         let allTrades = [];
         let currentPeriod = 'day';
         let dateRangePicker;
+
+        // Pagination State
+        let currentPage = 1;
+        const rowsPerPage = 5;
 
         // --- 2. INITIALIZATION ---
         document.addEventListener('DOMContentLoaded', function () {
@@ -1411,11 +1457,11 @@
             pChangeEl.className = `metric-change ${profitChange >= 0 ? 'positive' : 'negative'}`;
 
             const tChangeEl = document.getElementById('trades-change');
-            tChangeEl.textContent = `${tradesChange >= 0 ? '+' : ''}${tradesChange} since last`;
-            tChangeEl.className = `metric-change ${tradesChange >= 0 ? 'positive' : 'negative'}`;
+            tChangeEl.textContent = `${tradesChange > 0 ? '+' : ''}${tradesChange} today`;
+            tChangeEl.className = `metric-change ${tradesChange > 0 ? 'positive' : 'negative'}`;
 
             // Update History Table & Accuracy
-            updateTableUI(allTrades);
+            updateTableUI();
             calculateAccuracy();
 
             // Refresh Calendar view with new data
@@ -1427,22 +1473,30 @@
             previousMetrics.totalTrades = allTrades.length;
         }
 
-        function updateTableUI(trades) {
+        function updateTableUI(page = 1) {
+            currentPage = page;
             const tbody = document.getElementById('table-body');
             tbody.innerHTML = '';
 
-            if (trades.length === 0) {
+            const totalTrades = allTrades.length;
+            document.getElementById('trade-history-info').innerHTML = `<i class="fas fa-info-circle"></i> Showing ${totalTrades} total trades`;
+
+            if (totalTrades === 0) {
                 tbody.innerHTML = `<tr><td colspan="6"><div class="empty-state">No trades found</div></td></tr>`;
+                renderPagination(0);
                 return;
             }
 
-            // Show latest 50
-            const latest = trades.slice(-50).reverse();
+            // Show latest trades first
+            const reversedTrades = [...allTrades].reverse();
+            const start = (page - 1) * rowsPerPage;
+            const end = start + rowsPerPage;
+            const paginatedTrades = reversedTrades.slice(start, end);
 
-            latest.forEach((t, i) => {
+            paginatedTrades.forEach((t, i) => {
                 const tr = document.createElement('tr');
                 tr.style.animation = `fadeInRow 0.5s ease-out ${i * 0.05}s both`;
-                
+
                 const typeClass = t.direction.toLowerCase().includes('buy') ? 'type-buy' : 'type-sell';
                 const resClass = t.profit >= 0 ? 'result-win' : 'result-loss';
                 const profitClass = t.profit >= 0 ? 'profit-positive' : 'profit-negative';
@@ -1460,6 +1514,81 @@
                 `;
                 tbody.appendChild(tr);
             });
+
+            const totalPages = Math.ceil(totalTrades / rowsPerPage);
+            renderPagination(totalPages);
+        }
+
+        function renderPagination(totalPages) {
+            const container = document.getElementById('pagination-container');
+            container.innerHTML = '';
+            if (totalPages <= 1) return;
+
+            // Previous button
+            const prevBtn = document.createElement('button');
+            prevBtn.innerHTML = '&laquo; Prev';
+            prevBtn.className = 'pagination-btn';
+            prevBtn.disabled = currentPage === 1;
+            prevBtn.onclick = () => updateTableUI(currentPage - 1);
+            container.appendChild(prevBtn);
+
+            // Determine which page numbers to show
+            const page_links_to_show = 5;
+            let startPage = Math.max(1, currentPage - Math.floor(page_links_to_show / 2));
+            let endPage = Math.min(totalPages, startPage + page_links_to_show - 1);
+
+            if (endPage - startPage + 1 < page_links_to_show) {
+                startPage = Math.max(1, endPage - page_links_to_show + 1);
+            }
+
+            if (startPage > 1) {
+                const firstBtn = document.createElement('button');
+                firstBtn.innerText = '1';
+                firstBtn.className = 'pagination-btn';
+                firstBtn.onclick = () => updateTableUI(1);
+                container.appendChild(firstBtn);
+                if (startPage > 2) {
+                    const ellipsis = document.createElement('span');
+                    ellipsis.innerText = '...';
+                    ellipsis.style.padding = '10px 0';
+                    ellipsis.style.color = 'var(--gray)';
+                    container.appendChild(ellipsis);
+                }
+            }
+
+            for (let i = startPage; i <= endPage; i++) {
+                const pageBtn = document.createElement('button');
+                pageBtn.innerText = i;
+                pageBtn.className = 'pagination-btn';
+                if (i === currentPage) {
+                    pageBtn.classList.add('active');
+                }
+                pageBtn.onclick = () => updateTableUI(i);
+                container.appendChild(pageBtn);
+            }
+
+            if (endPage < totalPages) {
+                if (endPage < totalPages - 1) {
+                    const ellipsis = document.createElement('span');
+                    ellipsis.innerText = '...';
+                    ellipsis.style.padding = '10px 0';
+                    ellipsis.style.color = 'var(--gray)';
+                    container.appendChild(ellipsis);
+                }
+                const lastBtn = document.createElement('button');
+                lastBtn.innerText = totalPages;
+                lastBtn.className = 'pagination-btn';
+                lastBtn.onclick = () => updateTableUI(totalPages);
+                container.appendChild(lastBtn);
+            }
+
+            // Next button
+            const nextBtn = document.createElement('button');
+            nextBtn.innerHTML = 'Next &raquo;';
+            nextBtn.className = 'pagination-btn';
+            nextBtn.disabled = currentPage === totalPages;
+            nextBtn.onclick = () => updateTableUI(currentPage + 1);
+            container.appendChild(nextBtn);
         }
 
         function processSignalData(data) {
