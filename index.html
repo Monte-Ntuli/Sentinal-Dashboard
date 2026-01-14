@@ -219,6 +219,21 @@
             color: var(--danger);
         }
 
+        /* Chart Section */
+        .chart-section {
+            background: var(--card-bg);
+            border-radius: 20px;
+            padding: 25px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 30px var(--shadow);
+            animation: fadeIn 0.8s ease-out 0.3s both;
+        }
+
+        .chart-container {
+            position: relative;
+            height: 350px;
+        }
+
         /* Calendar Section */
         .calendar-section {
             background: var(--card-bg);
@@ -988,6 +1003,19 @@
             </div>
         </div>
 
+        <!-- Profit Chart Section -->
+        <div class="chart-section">
+            <div class="section-header" style="margin: 0 0 20px 0; border-bottom: none;">
+                <h2><i class="fas fa-chart-area"></i> Portfolio Growth</h2>
+                <div style="font-size: 14px; color: var(--gray);" id="chart-info">
+                    Visualizing cumulative profit over time
+                </div>
+            </div>
+            <div class="chart-container">
+                <canvas id="profit-chart"></canvas>
+            </div>
+        </div>
+
         <!-- Calendar Section -->
         <div class="calendar-section">
             <div class="calendar-header">
@@ -1184,6 +1212,10 @@
         </footer>
     </div>
 
+    <!-- Chart.js & Date Adapter -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
+
     <!-- Calendar Library -->
     <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 
@@ -1198,6 +1230,8 @@
         let allTrades = [];
         let currentPeriod = 'day';
         let dateRangePicker;
+        let profitChart;
+        let cumulativeProfitHistory = [];
 
         // Pagination State
         let currentPage = 1;
@@ -1319,6 +1353,9 @@
             // Update the Trade List for this period
             renderPeriodTrades(filteredTrades);
             
+            // Update Profit Chart
+            renderProfitChart(startDate, endDate);
+
             // Update Text Label
             const formatDate = (date) => date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
             if (startDate.getTime() === endDate.getTime()) {
@@ -1369,6 +1406,118 @@
                 `;
             });
             listContainer.innerHTML = html;
+        }
+
+        // Renders the portfolio growth chart
+        function renderProfitChart(startDate, endDate) {
+            if (profitChart) {
+                profitChart.destroy();
+            }
+            const ctx = document.getElementById('profit-chart').getContext('2d');
+
+            if (cumulativeProfitHistory.length === 0) {
+                ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+                ctx.font = "16px 'Inter'";
+                ctx.fillStyle = 'var(--gray)';
+                ctx.textAlign = 'center';
+                ctx.fillText('No historical data to draw chart.', ctx.canvas.width / 2, ctx.canvas.height / 2);
+                return;
+            }
+
+            // Find starting profit right before the period
+            const lastPointBefore = cumulativeProfitHistory.filter(p => p.time < startDate).pop();
+            const startingProfit = lastPointBefore ? lastPointBefore.cumulative : 0;
+
+            // Filter history for the selected period, ensuring we cover the full days
+            const periodHistory = cumulativeProfitHistory.filter(p => {
+                const pointTime = p.time.getTime();
+                const startTime = new Date(startDate).setHours(0, 0, 0, 0);
+                const endTime = new Date(endDate).setHours(23, 59, 59, 999);
+                return pointTime >= startTime && pointTime <= endTime;
+            });
+
+            const labels = [];
+            const dataPoints = [];
+
+            // Add a point for the start of the period to anchor the chart
+            labels.push(startDate);
+            dataPoints.push(startingProfit);
+
+            // Add the points from the period
+            periodHistory.forEach(p => {
+                labels.push(p.time);
+                dataPoints.push(p.cumulative);
+            });
+
+            // If there are no trades in the period, add an end point to draw a flat line
+            if (periodHistory.length === 0) {
+                labels.push(endDate);
+                dataPoints.push(startingProfit);
+            }
+
+            // Create gradient for the fill
+            const gradient = ctx.createLinearGradient(0, 0, 0, 350);
+            gradient.addColorStop(0, 'rgba(67, 97, 238, 0.3)');
+            gradient.addColorStop(1, 'rgba(67, 97, 238, 0)');
+
+            profitChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Cumulative Profit',
+                        data: dataPoints,
+                        backgroundColor: gradient,
+                        borderColor: 'var(--primary)',
+                        borderWidth: 2.5,
+                        pointRadius: 0,
+                        pointHoverRadius: 6,
+                        pointBackgroundColor: 'var(--primary)',
+                        pointHoverBorderColor: 'white',
+                        pointHoverBorderWidth: 2,
+                        tension: 0.4,
+                        fill: true,
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: {
+                            type: 'time',
+                            time: {
+                                unit: 'day',
+                                tooltipFormat: 'MMM dd, yyyy HH:mm'
+                            },
+                            grid: { display: false },
+                            ticks: { color: 'var(--gray)', font: { size: 12 }, maxRotation: 0, autoSkip: true, maxTicksLimit: 7 }
+                        },
+                        y: {
+                            beginAtZero: false,
+                            grid: { color: 'rgba(0,0,0,0.05)', drawBorder: false, },
+                            ticks: {
+                                color: 'var(--gray)', font: { size: 12 },
+                                callback: function(value) { return '$' + value.toLocaleString(); }
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            enabled: true, mode: 'index', intersect: false,
+                            backgroundColor: 'var(--dark)', titleFont: { size: 14, weight: 'bold' },
+                            bodyFont: { size: 12 }, padding: 12, cornerRadius: 8, displayColors: false,
+                            callbacks: {
+                                label: function(context) {
+                                    const value = context.parsed.y;
+                                    return 'Cumulative P/L: ' + new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(value);
+                                }
+                            }
+                        }
+                    },
+                    interaction: { mode: 'index', intersect: false }
+                }
+            });
         }
 
         // --- 4. DATA LOADING & PROCESSING ---
@@ -1442,6 +1591,14 @@
                 allTrades.push(trade);
                 totalProfit += profit;
                 if (profit > 0) winningTrades++;
+            });
+
+            // Create cumulative profit history for the chart
+            const sortedTradesForHistory = [...allTrades].sort((a, b) => new Date(a.exitTime) - new Date(b.exitTime));
+            let runningProfit = 0;
+            cumulativeProfitHistory = sortedTradesForHistory.map(trade => {
+                runningProfit += trade.profit;
+                return { time: new Date(trade.exitTime), cumulative: runningProfit };
             });
 
             // Update Header Metrics
