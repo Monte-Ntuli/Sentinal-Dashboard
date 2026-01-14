@@ -1146,7 +1146,7 @@
     <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 
     <script>
-        // Global state for metrics and calendar
+        // --- 1. GLOBAL STATE ---
         let previousMetrics = {
             totalTrades: 0,
             totalProfit: 0,
@@ -1157,8 +1157,9 @@
         let currentPeriod = 'day';
         let dateRangePicker;
 
-        // Initialize calendar
+        // --- 2. INITIALIZATION ---
         document.addEventListener('DOMContentLoaded', function () {
+            // Initialize Calendar
             dateRangePicker = flatpickr("#date-range-picker", {
                 mode: "range",
                 dateFormat: "Y-m-d",
@@ -1170,23 +1171,25 @@
                 }
             });
 
-            // Set default to today
+            // Set default date range to today and load initial data
             const today = new Date();
             dateRangePicker.setDate([today, today]);
-
             loadData();
         });
 
+        // --- 3. CORE FUNCTIONS ---
+
+        // Controls the Day/Week/Month/All buttons
         function setPeriod(period) {
             currentPeriod = period;
 
-            // Update active button
+            // Update active button styling
             document.querySelectorAll('.period-btn').forEach(btn => {
                 btn.classList.remove('active');
             });
             event.target.classList.add('active');
 
-            // Update date picker based on period
+            // Update date picker based on selection
             const today = new Date();
             let startDate, endDate;
 
@@ -1198,9 +1201,9 @@
                     break;
                 case 'week':
                     startDate = new Date(today);
-                    startDate.setDate(today.getDate() - today.getDay()); // Start of week (Sunday)
+                    startDate.setDate(today.getDate() - today.getDay()); 
                     endDate = new Date(today);
-                    endDate.setDate(today.getDate() + (6 - today.getDay())); // End of week (Saturday)
+                    endDate.setDate(today.getDate() + (6 - today.getDay())); 
                     document.getElementById('selected-period').textContent = 'This Week';
                     break;
                 case 'month':
@@ -1209,8 +1212,8 @@
                     document.getElementById('selected-period').textContent = 'This Month';
                     break;
                 case 'all':
-                    startDate = new Date(2000, 0, 1); // Far past date
-                    endDate = new Date(2100, 0, 1); // Far future date
+                    startDate = new Date(2000, 0, 1); 
+                    endDate = new Date(2100, 0, 1); 
                     document.getElementById('selected-period').textContent = 'All Time';
                     break;
             }
@@ -1219,153 +1222,145 @@
             updateCalendarTrades(startDate, endDate);
         }
 
+        // Filters trades based on the selected date range
         function updateCalendarTrades(startDate, endDate) {
             if (allTrades.length === 0) return;
 
-            // Filter trades within date range
+            // Filter trades
             const filteredTrades = allTrades.filter(trade => {
                 const tradeDate = new Date(trade.exitTime);
-                return tradeDate >= startDate && tradeDate <= endDate;
+                // Reset hours to compare dates only
+                const d = new Date(tradeDate.getFullYear(), tradeDate.getMonth(), tradeDate.getDate());
+                const s = new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate());
+                const e = new Date(endDate.getFullYear(), endDate.getMonth(), endDate.getDate());
+                return d >= s && d <= e;
             });
 
-            // Calculate period statistics
+            // Calculate statistics
             let totalProfit = 0;
             let winningTrades = 0;
-            let losingTrades = 0;
 
             filteredTrades.forEach(trade => {
                 totalProfit += trade.profit;
                 if (trade.profit > 0) winningTrades++;
-                else losingTrades++;
             });
 
             const totalTrades = filteredTrades.length;
             const winRate = totalTrades > 0 ? Math.round((winningTrades / totalTrades) * 100) : 0;
             const avgProfit = totalTrades > 0 ? totalProfit / totalTrades : 0;
 
-            // Update period summary
+            // Update UI Elements
             document.getElementById('period-total-trades').textContent = totalTrades;
-            document.getElementById('period-total-profit').textContent = `$${totalProfit.toFixed(2)}`;
-            document.getElementById('period-total-profit').style.color = totalProfit >= 0 ? 'var(--success)' : 'var(--danger)';
+            
+            const pnlEl = document.getElementById('period-total-profit');
+            pnlEl.textContent = `$${totalProfit.toFixed(2)}`;
+            pnlEl.style.color = totalProfit >= 0 ? 'var(--success)' : 'var(--danger)';
+
             document.getElementById('period-winning-trades').textContent = winningTrades;
-            document.getElementById('period-average-profit').textContent = `$${avgProfit.toFixed(2)}`;
-            document.getElementById('period-average-profit').style.color = avgProfit >= 0 ? 'var(--success)' : 'var(--danger)';
+            
+            const avgEl = document.getElementById('period-average-profit');
+            avgEl.textContent = `$${avgProfit.toFixed(2)}`;
+            avgEl.style.color = avgProfit >= 0 ? 'var(--success)' : 'var(--danger)';
 
-            // Update period PnL and win rate
-            const pnlElement = document.getElementById('period-pnl');
-            pnlElement.textContent = `$${totalProfit.toFixed(2)}`;
-            pnlElement.style.color = totalProfit >= 0 ? 'var(--success)' : 'var(--danger)';
+            const mainPnl = document.getElementById('period-pnl');
+            mainPnl.textContent = `$${totalProfit.toFixed(2)}`;
+            mainPnl.style.color = totalProfit >= 0 ? 'var(--success)' : 'var(--danger)';
 
-            document.getElementById('period-win-rate').textContent = `${winRate}%`;
-            document.getElementById('period-win-rate').style.color =
-                winRate >= 70 ? 'var(--success)' : winRate >= 50 ? 'var(--warning)' : 'var(--danger)';
+            const winRateEl = document.getElementById('period-win-rate');
+            winRateEl.textContent = `${winRate}%`;
+            winRateEl.style.color = winRate >= 50 ? 'var(--success)' : 'var(--danger)';
 
-            // Update trades list
-            const tradesList = document.getElementById('period-trades-list');
+            // Update the Trade List for this period
+            renderPeriodTrades(filteredTrades);
+            
+            // Update Text Label
+            const formatDate = (date) => date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+            if (startDate.getTime() === endDate.getTime()) {
+                document.getElementById('selected-period').textContent = formatDate(startDate);
+            } else {
+                document.getElementById('selected-period').textContent = `${formatDate(startDate)} - ${formatDate(endDate)}`;
+            }
+        }
 
-            if (filteredTrades.length === 0) {
-                tradesList.innerHTML = `
+        // Renders the list of trades inside the calendar section
+        function renderPeriodTrades(trades) {
+            const listContainer = document.getElementById('period-trades-list');
+            
+            if (trades.length === 0) {
+                listContainer.innerHTML = `
                     <div class="no-trades">
                         <i class="fas fa-chart-bar"></i>
                         <h4>No trades in selected period</h4>
                         <p>Select a different date range to view trades</p>
-                    </div>
-                `;
+                    </div>`;
                 return;
             }
 
-            // Sort trades by date (newest first)
-            const sortedTrades = [...filteredTrades].sort((a, b) =>
-                new Date(b.exitTime) - new Date(a.exitTime)
-            );
-
-            let tradesHTML = '';
-            sortedTrades.forEach(trade => {
-                const tradeDate = new Date(trade.exitTime);
-                const formattedTime = tradeDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-                const formattedDate = tradeDate.toLocaleDateString();
-
-                tradesHTML += `
+            // Sort newest first
+            const sorted = [...trades].sort((a, b) => new Date(b.exitTime) - new Date(a.exitTime));
+            
+            let html = '';
+            sorted.forEach(t => {
+                const dateObj = new Date(t.exitTime);
+                const timeStr = dateObj.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+                const dateStr = dateObj.toLocaleDateString();
+                const profitClass = t.profit >= 0 ? 'profit-positive' : 'profit-negative';
+                
+                html += `
                     <div class="trade-item">
                         <div class="trade-info">
-                            <div class="trade-symbol">
-                                ${trade.symbol} • ${trade.direction}
-                                <span style="font-size: 12px; color: var(--gray); font-weight: normal; margin-left: 10px;">
-                                    ${formattedDate} ${formattedTime}
-                                </span>
+                            <div class="trade-symbol">${t.symbol} • ${t.direction} 
+                                <span style="font-size:12px; color:var(--gray); margin-left:10px;">${dateStr} ${timeStr}</span>
                             </div>
                             <div class="trade-meta">
-                                <span>Entry: ${parseFloat(trade.entryPrice).toFixed(5)}</span>
-                                <span>Exit: ${parseFloat(trade.exitPrice).toFixed(5)}</span>
-                                <span>Lot: ${trade.lot}</span>
+                                <span>Entry: ${parseFloat(t.entryPrice).toFixed(5)}</span>
+                                <span>Exit: ${parseFloat(t.exitPrice).toFixed(5)}</span>
+                                <span>Lot: ${t.lot}</span>
                             </div>
                         </div>
-                        <div class="trade-profit ${trade.profit >= 0 ? 'profit-positive' : 'profit-negative'}">
-                            ${trade.profit >= 0 ? '+' : ''}$${trade.profit.toFixed(2)}
-                        </div>
+                        <div class="trade-profit ${profitClass}">${t.profit >= 0 ? '+' : ''}$${t.profit.toFixed(2)}</div>
                     </div>
                 `;
             });
-
-            tradesList.innerHTML = tradesHTML;
-
-            // Update period display
-            const formatDate = (date) => date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-
-            if (currentPeriod === 'day') {
-                document.getElementById('selected-period').textContent =
-                    `Today (${formatDate(startDate)})`;
-            } else if (currentPeriod === 'week' || currentPeriod === 'month' || currentPeriod === 'all') {
-                if (startDate.toDateString() === endDate.toDateString()) {
-                    document.getElementById('selected-period').textContent = formatDate(startDate);
-                } else {
-                    document.getElementById('selected-period').textContent =
-                        `${formatDate(startDate)} - ${formatDate(endDate)}`;
-                }
-            }
+            listContainer.innerHTML = html;
         }
+
+        // --- 4. DATA LOADING & PROCESSING ---
 
         async function loadData() {
             const refreshBtn = document.querySelector('.refresh-btn');
             const originalText = refreshBtn.innerHTML;
-
-            // Show loading state
             refreshBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Refreshing...';
             refreshBtn.disabled = true;
 
             try {
-                // Fetch both datasets in parallel
-                const [tradeResponse, signalResponse] = await Promise.allSettled([
+                // Fetch data with timestamp to prevent caching
+                const [tradeRes, signalRes] = await Promise.allSettled([
                     fetch('BEAN_TradeCloseLog.csv?t=' + new Date().getTime()),
                     fetch('Live_Signals.csv?t=' + new Date().getTime())
                 ]);
 
-                // Process trades
-                if (tradeResponse.status === 'fulfilled') {
-                    const tradeData = await tradeResponse.value.text();
-                    processTradeData(tradeData);
+                if (tradeRes.status === 'fulfilled') {
+                    const text = await tradeRes.value.text();
+                    processTradeData(text);
                 }
 
-                // Process signals
-                if (signalResponse.status === 'fulfilled') {
-                    const signalData = await signalResponse.value.text();
-                    processSignalData(signalData);
+                if (signalRes.status === 'fulfilled') {
+                    const text = await signalRes.value.text();
+                    processSignalData(text);
                 }
 
-                // Update timestamp
+                // Update Timestamp
                 const now = new Date();
-                document.getElementById('last-update').innerText =
-                    now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+                document.getElementById('last-update').innerText = now.toLocaleTimeString();
+                
+                // Flash effect
+                const bar = document.querySelector('.update-time');
+                bar.style.background = 'var(--success)';
+                setTimeout(() => bar.style.background = 'rgba(67, 97, 238, 0.1)', 1000);
 
-                // Visual feedback
-                const updateTimeEl = document.querySelector('.update-time');
-                updateTimeEl.style.backgroundColor = 'rgba(6, 214, 160, 0.2)';
-                setTimeout(() => {
-                    updateTimeEl.style.backgroundColor = 'rgba(67, 97, 238, 0.1)';
-                }, 1000);
-
-            } catch (error) {
-                console.error('Error loading data:', error);
+            } catch (err) {
+                console.error(err);
                 showErrorState();
             } finally {
                 refreshBtn.innerHTML = originalText;
@@ -1374,226 +1369,178 @@
         }
 
         function processTradeData(data) {
-            // Fix: Split by newline and filter out empty strings immediately
             const rows = data.split('\n').filter(r => r.trim() !== '');
-
-            // Remove header row if it exists (check if first row contains 'ExitTime')
+            // Skip header if present
             const dataRows = rows[0].includes('ExitTime') ? rows.slice(1) : rows;
 
-            const tableBody = document.getElementById('table-body');
-
-            // Reset data
             allTrades = [];
             let totalProfit = 0;
             let winningTrades = 0;
 
             dataRows.forEach(row => {
                 const cols = row.split(',');
-
-                // SAFETY CHECK: Ensure we have enough columns before processing
-                // MQL5 sends ~9 columns. If we have less than 3, it's garbage data.
-                if (cols.length < 3) return;
+                if (cols.length < 5) return; // Skip malformed rows
 
                 const profit = parseFloat(cols[6]) || 0;
-
-                // Safe access to direction
-                const directionRaw = cols[2] || "---";
-
                 const trade = {
-                    exitTime: cols[0].replace(/\./g, '-'),
+                    exitTime: cols[0].replace(/\./g, '-'), // Standardize date
                     symbol: cols[1],
-                    direction: directionRaw,
+                    direction: cols[2],
                     lot: cols[3],
                     entryPrice: cols[4],
                     exitPrice: cols[5],
                     profit: profit,
                     result: cols[7]
                 };
-                allTrades.push(trade);
 
+                allTrades.push(trade);
                 totalProfit += profit;
                 if (profit > 0) winningTrades++;
             });
 
-            // ... (Rest of your UI update logic remains the same) ...
-
-            // Recalculate metrics and update UI logic here (copied from your original code)
-            const totalTrades = allTrades.length;
-            document.getElementById('total-trades').textContent = totalTrades;
+            // Update Header Metrics
+            document.getElementById('total-trades').textContent = allTrades.length;
             document.getElementById('total-profit').textContent = `$${totalProfit.toFixed(2)}`;
 
-            // ... [Keep the rest of your original UI update code here]
+            // Calculate Changes (Trends)
+            const profitChange = totalProfit - previousMetrics.totalProfit;
+            const tradesChange = allTrades.length - previousMetrics.totalTrades;
 
-            updateTableUI(allTrades); // Moved table render to helper to keep clean
+            const pChangeEl = document.getElementById('profit-change');
+            pChangeEl.textContent = `${profitChange >= 0 ? '+' : ''}$${profitChange.toFixed(2)}`;
+            pChangeEl.className = `metric-change ${profitChange >= 0 ? 'positive' : 'negative'}`;
+
+            const tChangeEl = document.getElementById('trades-change');
+            tChangeEl.textContent = `${tradesChange >= 0 ? '+' : ''}${tradesChange} since last`;
+            tChangeEl.className = `metric-change ${tradesChange >= 0 ? 'positive' : 'negative'}`;
+
+            // Update History Table & Accuracy
+            updateTableUI(allTrades);
+            calculateAccuracy();
+
+            // Refresh Calendar view with new data
+            const dates = dateRangePicker.selectedDates;
+            if(dates.length === 2) updateCalendarTrades(dates[0], dates[1]);
+
+            // Save state for next comparison
+            previousMetrics.totalProfit = totalProfit;
+            previousMetrics.totalTrades = allTrades.length;
         }
 
-        // Helper function to render table (Call this at end of processTradeData)
         function updateTableUI(trades) {
-            const tableBody = document.getElementById('table-body');
-            tableBody.innerHTML = '';
+            const tbody = document.getElementById('table-body');
+            tbody.innerHTML = '';
 
             if (trades.length === 0) {
-                // ... [Insert your empty state HTML here] ...
+                tbody.innerHTML = `<tr><td colspan="6"><div class="empty-state">No trades found</div></td></tr>`;
                 return;
             }
 
-            const latestTrades = trades.slice(-50).reverse();
+            // Show latest 50
+            const latest = trades.slice(-50).reverse();
 
-            latestTrades.forEach((trade, index) => {
+            latest.forEach((t, i) => {
                 const tr = document.createElement('tr');
-                tr.style.animation = `fadeInRow 0.5s ease-out ${index * 0.02}s both`;
+                tr.style.animation = `fadeInRow 0.5s ease-out ${i * 0.05}s both`;
+                
+                const typeClass = t.direction.toLowerCase().includes('buy') ? 'type-buy' : 'type-sell';
+                const resClass = t.profit >= 0 ? 'result-win' : 'result-loss';
+                const profitClass = t.profit >= 0 ? 'profit-positive' : 'profit-negative';
 
-                // Fix: Safe toLowerCase check
-                const dirString = trade.direction ? trade.direction.toString().toLowerCase() : "";
-                const typeClass = dirString.includes('buy') ? 'type-buy' : 'type-sell';
+                // Format Time
+                const timeStr = t.exitTime.includes(' ') ? t.exitTime.split(' ')[1] : t.exitTime;
 
-                const profitClass = trade.profit >= 0 ? 'profit-positive' : 'profit-negative';
-                const resultClass = trade.profit >= 0 ? 'result-win' : 'result-loss';
-
-                // ... [Insert your innerHTML generation here] ...
-                // Make sure to use the variables defined above
                 tr.innerHTML = `
-                    <td data-label="Time">${trade.exitTime.split(' ')[1] || trade.exitTime}</td>
-                    <td data-label="Symbol"><div class="symbol"><b>${trade.symbol}</b></div></td>
-                    <td data-label="Type"><span class="type-badge ${typeClass}">${trade.direction}</span></td>
-                    <td data-label="Price"><strong>${parseFloat(trade.exitPrice).toFixed(5)}</strong></td>
-                    <td data-label="Profit"><span class="${profitClass}">$${trade.profit.toFixed(2)}</span></td>
-                    <td data-label="Result"><span class="result-badge ${resultClass}">${trade.result}</span></td>
+                    <td data-label="Time">${timeStr}</td>
+                    <td data-label="Symbol"><div class="symbol"><b>${t.symbol}</b></div></td>
+                    <td data-label="Type"><span class="type-badge ${typeClass}">${t.direction}</span></td>
+                    <td data-label="Price"><strong>${parseFloat(t.exitPrice).toFixed(5)}</strong></td>
+                    <td data-label="Profit"><span class="${profitClass}">$${t.profit.toFixed(2)}</span></td>
+                    <td data-label="Result"><span class="result-badge ${resClass}">${t.result}</span></td>
                 `;
-                tableBody.appendChild(tr);
+                tbody.appendChild(tr);
             });
         }
 
         function processSignalData(data) {
-            const lines = data.trim().split('\n');
-            const historyBody = document.getElementById('signal-history-body');
-            const activeAlert = document.getElementById('signal-alert');
+            const rows = data.split('\n').filter(r => r.trim() !== '');
+            // Skip header if present
+            const dataRows = rows[0].includes('Time') ? rows.slice(1) : rows;
 
-            historyBody.innerHTML = '';
+            const tbody = document.getElementById('signal-history-body');
+            tbody.innerHTML = '';
+            
+            // Update Metric Count
+            document.getElementById('active-signals').textContent = dataRows.length;
 
-            if (lines.length > 1) {
-                // Update active signals count
-                document.getElementById('active-signals').textContent = lines.length - 1;
-
-                // Process latest signal for alert
-                const latest = lines[1].split(',');
+            // Handle Alert (Most recent signal)
+            if (dataRows.length > 0) {
+                const latest = dataRows[0].split(',');
                 if (latest.length >= 7) {
-                    activeAlert.style.display = 'block';
-
-                    // Add animation for new signal
-                    activeAlert.style.animation = 'slideInRight 0.5s ease-out';
-
+                    const alertBox = document.getElementById('signal-alert');
+                    alertBox.style.display = 'block';
+                    
                     document.getElementById('sig-symbol').textContent = latest[1];
                     document.getElementById('sig-direction').textContent = latest[2];
-                    document.getElementById('sig-direction').style.color =
-                        latest[2].includes('BUY') ? 'var(--success)' : 'var(--danger)';
                     document.getElementById('sig-entry').textContent = latest[3];
                     document.getElementById('sig-sl').textContent = latest[4];
                     document.getElementById('sig-tp').textContent = latest[5];
                     document.getElementById('sig-conf').textContent = latest[6];
-
-                    // Format metadata
-                    const timeParts = latest[0].split(' ');
-                    const date = timeParts[0] || '';
-                    const time = timeParts[1] || '';
-                    document.getElementById('sig-meta').textContent =
-                        `Detected on ${date} at ${time} | ${latest[1]}`;
+                    
+                    document.getElementById('sig-meta').innerText = `Detected at ${latest[0]}`;
                 }
-
-                // Process all signals for history table
-                const signalsToShow = lines.slice(1, 11); // Show latest 10 signals
-
-                signalsToShow.forEach((line, index) => {
-                    const cols = line.split(',');
-                    if (cols.length < 7) return;
-
-                    const row = document.createElement('tr');
-                    row.style.animation = `fadeInRow 0.5s ease-out ${index * 0.05}s both`;
-
-                    const typeColor = cols[2].includes('BUY') ? 'var(--success)' : 'var(--danger)';
-                    const timeParts = cols[0].split(' ');
-                    const displayTime = timeParts[1] || cols[0];
-
-                    row.innerHTML = `
-                        <td data-label="Time">${displayTime}</td>
-                        <td data-label="Symbol">
-                            <div class="symbol">
-                                <i class="fas fa-chart-line"></i>
-                                ${cols[1]}
-                            </div>
-                        </td>
-                        <td data-label="Type" style="color: ${typeColor}; font-weight:700;">${cols[2]}</td>
-                        <td data-label="Entry"><strong>${cols[3]}</strong></td>
-                        <td data-label="TP" style="color: var(--success);">${cols[5]}</td>
-                        <td data-label="SL" style="color: var(--danger);">${cols[4]}</td>
-                        <td data-label="Confidence"><span class="confidence-badge">${cols[6]}</span></td>
-                    `;
-                    historyBody.appendChild(row);
-                });
-
-                // Calculate accuracy
-                calculateAccuracy();
-            } else {
-                activeAlert.style.display = 'none';
-                document.getElementById('active-signals').textContent = '0';
-                historyBody.innerHTML = `
-                    <tr>
-                        <td colspan="7">
-                            <div class="empty-state">
-                                <i class="fas fa-brain"></i>
-                                <h3>No AI signals detected</h3>
-                                <p>Waiting for neural network analysis...</p>
-                            </div>
-                        </td>
-                    </tr>
-                `;
             }
+
+            // Populate Table (Top 10)
+            dataRows.slice(0, 10).forEach((row, i) => {
+                const cols = row.split(',');
+                if(cols.length < 7) return;
+
+                const tr = document.createElement('tr');
+                const typeColor = cols[2].includes('BUY') ? 'var(--success)' : 'var(--danger)';
+                
+                tr.innerHTML = `
+                    <td data-label="Time">${cols[0].split(' ')[1] || cols[0]}</td>
+                    <td data-label="Symbol"><b>${cols[1]}</b></td>
+                    <td data-label="Type" style="color:${typeColor}; font-weight:bold">${cols[2]}</td>
+                    <td data-label="Entry">${cols[3]}</td>
+                    <td data-label="TP" style="color:var(--success)">${cols[5]}</td>
+                    <td data-label="SL" style="color:var(--danger)">${cols[4]}</td>
+                    <td data-label="Conf"><span class="confidence-badge">${cols[6]}</span></td>
+                `;
+                tbody.appendChild(tr);
+            });
         }
 
         function calculateAccuracy() {
-            // Count actual wins vs losses in the visible trade table
-            const rows = document.querySelectorAll('#table-body tr:not(.empty-state-row)');
-            if (rows.length === 0) return;
+            if (allTrades.length === 0) return;
+            
+            // Calculate based on last 50 trades (matching history view)
+            const recent = allTrades.slice(-50);
+            const wins = recent.filter(t => t.profit > 0).length;
+            const rate = Math.round((wins / recent.length) * 100);
 
-            let wins = 0;
-            rows.forEach(row => {
-                if (row.innerHTML.includes('result-win') || row.innerHTML.includes('PROFIT')) {
-                    wins++;
-                }
-            });
+            const accVal = document.getElementById('accuracy-value');
+            accVal.textContent = `${rate}%`;
+            
+            if (rate >= 60) accVal.style.color = 'var(--success)';
+            else if (rate >= 40) accVal.style.color = 'var(--warning)';
+            else accVal.style.color = 'var(--danger)';
 
-            const rate = Math.round((wins / rows.length) * 100);
-            const accuracyElement = document.getElementById('accuracy-value');
-
-            accuracyElement.textContent = rate + '%';
-
-            // Dynamic Colors
-            if (rate >= 65) accuracyElement.style.color = "var(--success)";
-            else if (rate >= 50) accuracyElement.style.color = "var(--warning)";
-            else accuracyElement.style.color = "var(--danger)";
-
-            document.getElementById('accuracy-trend').textContent = `Based on last ${rows.length} trades`;
+            document.getElementById('accuracy-trend').textContent = `Based on last ${recent.length} trades`;
         }
 
         function showErrorState() {
-            const tableBody = document.getElementById('table-body');
-            tableBody.innerHTML = `
-                <tr class="empty-state-row">
-                    <td colspan="6">
-                        <div class="empty-state">
-                            <i class="fas fa-exclamation-triangle"></i>
-                            <h3>Failed to load data</h3>
-                            <p>Please check your connection and try again</p>
-                        </div>
-                    </td>
-                </tr>
-            `;
-            document.getElementById('last-update').innerText = "Update failed";
+            document.getElementById('table-body').innerHTML = `
+                <tr><td colspan="6" class="empty-state">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <h3>Connection Failed</h3>
+                    <p>Ensure Python script is running.</p>
+                </td></tr>`;
         }
 
         // Auto-refresh every 30 seconds
         setInterval(loadData, 30000);
     </script>
 </body>
-
 </html>
