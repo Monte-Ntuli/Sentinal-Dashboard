@@ -1,34 +1,37 @@
 @echo off
-:: CONFIGURATION
+:: --- CONFIGURATION ---
 SET "WEB_DIR=C:\Users\Public\Bean_Website"
+:: Ensure this matches your specific AppData path
 SET "SOURCE_DIR=C:\Users\E7240\AppData\Roaming\MetaQuotes\Terminal\Common\Files"
 
 echo ---------------------------------------------------
-echo ☁️ GITHUB AUTO-SYNC INITIALIZED
+echo 🕐 HOURLY GITHUB SYNC INITIALIZED
 echo ---------------------------------------------------
 
 :LOOP
+echo.
+echo [%DATE% %TIME%] Starting hourly update...
+
+:: 1. Navigate to Web Directory
 cd /d "%WEB_DIR%"
 
-:: 1. Force copy the latest CSVs from MT5 just to be sure
+:: 2. Force copy the latest CSVs from MT5 to ensure fresh data
 copy /Y "%SOURCE_DIR%\BEAN_TradeCloseLog.csv" "BEAN_TradeCloseLog.csv" >nul
 copy /Y "%SOURCE_DIR%\Live_Signals.csv" "Live_Signals.csv" >nul
 
-:: 2. Add files to Git staging area
+:: 3. Git Sequence
 git add .
+git commit -m "Hourly Update: %date% %time%"
 
-:: 3. Commit with a timestamp
-git commit -m "Auto-Update: %date% %time%"
-
-:: 4. Push to GitHub (This makes it live)
+:: 4. Push to GitHub
 echo 🚀 Pushing to GitHub...
 git push origin main
 
 echo.
-echo ✅ Data sent! GitHub Pages will update in ~30-60 seconds.
-echo ⏳ Waiting 60 seconds before next update...
+echo ✅ Update complete.
+echo 💤 Waiting 1 hour (3600 seconds) for next cycle...
 echo ---------------------------------------------------
 
-:: Wait 60 seconds (GitHub might block you if you push faster than this)
-timeout /t 60 >nul
+:: Wait 3600 seconds (1 Hour)
+timeout /t 3600 /nobreak >nul
 goto LOOP
