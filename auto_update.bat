@@ -5,7 +5,7 @@ SET "WEB_DIR=C:\Users\Public\Bean_Website"
 SET "SOURCE_DIR=C:\Users\E7240\AppData\Roaming\MetaQuotes\Terminal\Common\Files"
 
 echo ---------------------------------------------------
-echo 🕐 HOURLY GITHUB SYNC INITIALIZED
+echo HOURLY GITHUB SYNC INITIALIZED
 echo ---------------------------------------------------
 
 :LOOP
@@ -24,12 +24,12 @@ git add .
 git commit -m "Hourly Update: %date% %time%"
 
 :: 4. Push to GitHub
-echo 🚀 Pushing to GitHub...
+echo Pushing to GitHub...
 git push origin main
 
 echo.
-echo ✅ Update complete.
-echo 💤 Waiting 1 hour (3600 seconds) for next cycle...
+echo Update complete.
+echo Waiting 1 hour (3600 seconds) for next cycle...
 echo ---------------------------------------------------
 
 :: Wait 3600 seconds (1 Hour)
