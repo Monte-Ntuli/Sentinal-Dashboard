@@ -1,24 +1,34 @@
 @echo off
-:: 1. Source: Where MT5 saves files (Check your MT5 -> File -> Open Data Folder -> Up to Terminal -> Common -> Files)
-SET "SOURCE=C:\Users\E7240\AppData\Roaming\MetaQuotes\Terminal\Common\Files"
-
-:: 2. Destination: Where your index.html is located
-SET "DEST=C:\Users\Public\Bean_Website"
-
-:: Create dest if missing
-if not exist "%DEST%" mkdir "%DEST%"
+:: CONFIGURATION
+SET "WEB_DIR=C:\Users\Public\Bean_Website"
+SET "SOURCE_DIR=C:\Users\E7240\AppData\Roaming\MetaQuotes\Terminal\Common\Files"
 
 echo ---------------------------------------------------
-echo 🔄 SYNCING SENTINEL DATA...
-echo Source: %SOURCE%
-echo Dest:   %DEST%
+echo ☁️ GITHUB AUTO-SYNC INITIALIZED
 echo ---------------------------------------------------
 
 :LOOP
-:: Copy logs from MT5 to Website folder
-copy /Y "%SOURCE%\BEAN_TradeCloseLog.csv" "%DEST%\BEAN_TradeCloseLog.csv" >nul
-copy /Y "%SOURCE%\Live_Signals.csv" "%DEST%\Live_Signals.csv" >nul
+cd /d "%WEB_DIR%"
 
-:: Update every 3 seconds
-timeout /t 3 /nobreak >nul
+:: 1. Force copy the latest CSVs from MT5 just to be sure
+copy /Y "%SOURCE_DIR%\BEAN_TradeCloseLog.csv" "BEAN_TradeCloseLog.csv" >nul
+copy /Y "%SOURCE_DIR%\Live_Signals.csv" "Live_Signals.csv" >nul
+
+:: 2. Add files to Git staging area
+git add .
+
+:: 3. Commit with a timestamp
+git commit -m "Auto-Update: %date% %time%"
+
+:: 4. Push to GitHub (This makes it live)
+echo 🚀 Pushing to GitHub...
+git push origin main
+
+echo.
+echo ✅ Data sent! GitHub Pages will update in ~30-60 seconds.
+echo ⏳ Waiting 60 seconds before next update...
+echo ---------------------------------------------------
+
+:: Wait 60 seconds (GitHub might block you if you push faster than this)
+timeout /t 60 >nul
 goto LOOP
