@@ -1551,7 +1551,7 @@
         let dateRangePicker;
         let profitChart;
         let cumulativeProfitHistory = [];
-        let currentChartPeriod = 'all'; // Default to All Time
+        let currentChartPeriod = 'all';
 
         // Visual Calendar State
         let calendarDate = new Date(); // Defaults to today
@@ -1585,7 +1585,6 @@
 
         // --- 3. CORE FUNCTIONS ---
 
-        // Controls the Chart Filters (1D, 1W, 1M, 1Y, ALL)
         function setChartPeriod(period) {
             currentChartPeriod = period;
             
@@ -1595,7 +1594,7 @@
             });
             event.target.classList.add('active');
 
-            // Calculate dates based on period relative to today/now
+            // Calculate dates based on period relative to today
             const today = new Date();
             let startDate = new Date();
             const endDate = new Date(); // Always end now
@@ -1633,7 +1632,6 @@
             renderProfitChart(startDate, endDate);
         }
 
-        // Controls the Day/Week/Month/All buttons for TRADING JOURNAL
         function setPeriod(period) {
             currentPeriod = period;
 
@@ -1676,14 +1674,13 @@
             updateCalendarTrades(startDate, endDate);
         }
 
-        // Filters trades based on the selected date range
         function updateCalendarTrades(startDate, endDate) {
             if (allTrades.length === 0) return;
 
             // Filter trades
             const filteredTrades = allTrades.filter(trade => {
                 const tradeDate = new Date(trade.exitTime);
-                // Reset hours to compare dates only
+                if (isNaN(tradeDate)) return false; // Skip invalid dates
                 const d = new Date(tradeDate.getFullYear(), tradeDate.getMonth(), tradeDate.getDate());
                 const s = new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate());
                 const e = new Date(endDate.getFullYear(), endDate.getMonth(), endDate.getDate());
@@ -1724,10 +1721,9 @@
             winRateEl.textContent = `${winRate}%`;
             winRateEl.style.color = winRate >= 50 ? 'var(--success)' : 'var(--danger)';
 
-            // Update the Trade List for this period
             renderPeriodTrades(filteredTrades);
-
-            // Update Text Label
+            
+            // Note: We don't render chart here anymore, it's handled by setChartPeriod
             const formatDate = (date) => date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
             if (startDate.getTime() === endDate.getTime()) {
                 document.getElementById('selected-period').textContent = formatDate(startDate);
@@ -1736,7 +1732,6 @@
             }
         }
 
-        // Renders the list of trades inside the calendar section
         function renderPeriodTrades(trades) {
             const listContainer = document.getElementById('period-trades-list');
             
@@ -1750,14 +1745,13 @@
                 return;
             }
 
-            // Sort newest first
             const sorted = [...trades].sort((a, b) => new Date(b.exitTime) - new Date(a.exitTime));
             
             let html = '';
             sorted.forEach(t => {
                 const dateObj = new Date(t.exitTime);
-                const timeStr = dateObj.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-                const dateStr = dateObj.toLocaleDateString();
+                const timeStr = !isNaN(dateObj) ? dateObj.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : '--:--';
+                const dateStr = !isNaN(dateObj) ? dateObj.toLocaleDateString() : '';
                 const profitClass = t.profit >= 0 ? 'profit-positive' : 'profit-negative';
                 
                 html += `
@@ -1779,7 +1773,6 @@
             listContainer.innerHTML = html;
         }
 
-        // --- VISUAL CALENDAR FUNCTIONS ---
         function changeCalendarMonth(delta) {
             calendarDate.setMonth(calendarDate.getMonth() + delta);
             renderVisualCalendar();
@@ -1788,20 +1781,17 @@
         function renderVisualCalendar() {
             const year = calendarDate.getFullYear();
             const month = calendarDate.getMonth();
-            
-            // Update Header
             const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
             document.getElementById('visual-calendar-month').innerText = `${monthNames[month]} ${year}`;
 
             const firstDay = new Date(year, month, 1);
             const lastDay = new Date(year, month + 1, 0);
             const daysInMonth = lastDay.getDate();
-            const startingDay = firstDay.getDay(); // 0 = Sunday
+            const startingDay = firstDay.getDay();
 
             const grid = document.getElementById('visual-calendar-body');
             grid.innerHTML = '';
 
-            // ---- Data Aggregation ----
             const dailyData = {};
             let monthTrades = [];
             
@@ -1818,15 +1808,12 @@
                 });
             }
 
-            // ---- Render Calendar Grid ----
-            // Empty cells before first day
             for(let i = 0; i < startingDay; i++) {
                 const cell = document.createElement('div');
                 cell.className = 'cal-cell empty';
                 grid.appendChild(cell);
             }
 
-            // Days
             for(let day = 1; day <= daysInMonth; day++) {
                 const cell = document.createElement('div');
                 cell.className = 'cal-cell';
@@ -1856,12 +1843,10 @@
                 grid.appendChild(cell);
             }
             
-            // ---- Calculate & Render Monthly/Weekly Stats ----
             calculateWeeklyStats(monthTrades, year, month);
         }
         
         function calculateWeeklyStats(monthTrades, year, month) {
-            // 1. Month Aggregates
             let totalPnL = 0;
             let wins = 0;
             let winAmt = 0;
@@ -1879,7 +1864,6 @@
             const avgWin = wins > 0 ? Math.round(winAmt / wins) : 0;
             const avgLoss = losses > 0 ? Math.round(lossAmt / losses) : 0;
             
-            // Update Mini Stats in DOM
             const pnlEl = document.getElementById('month-total-pnl');
             pnlEl.innerText = (totalPnL >= 0 ? '+' : '-') + '$' + Math.abs(totalPnL).toFixed(2);
             pnlEl.style.color = totalPnL >= 0 ? 'var(--success)' : 'var(--danger)';
@@ -1889,20 +1873,14 @@
             document.getElementById('month-avg-loss').innerText = '$' + avgLoss;
             document.getElementById('month-total-trades').innerText = totalCount;
             
-            // 2. Weekly Breakdown
-            // We align weeks by calendar rows (Sun-Sat)
             const weekStats = {};
-            
-            // Helper to get week number (1-6) of the month for a specific day
             const getWeekNum = (dateObj) => {
                 const firstDayOfMonth = new Date(dateObj.getFullYear(), dateObj.getMonth(), 1);
-                const offset = firstDayOfMonth.getDay(); // 0-6 (Sun-Sat)
+                const offset = firstDayOfMonth.getDay();
                 const day = dateObj.getDate();
                 return Math.ceil((day + offset) / 7);
             };
-
-            // Init tracking
-            const activeDaysPerWeek = {}; // To count unique active days
+            const activeDaysPerWeek = {}; 
 
             monthTrades.forEach(t => {
                 const tDate = new Date(t.exitTime);
@@ -1918,11 +1896,9 @@
                 activeDaysPerWeek[weekNum].add(tDate.getDate());
             });
             
-            // Render Weekly List
             const weekListEl = document.getElementById('weekly-breakdown-list');
             weekListEl.innerHTML = '';
             
-            // We usually have 4-6 weeks
             const maxWeeks = Math.ceil((new Date(year, month+1, 0).getDate() + new Date(year, month, 1).getDay()) / 7);
             
             for(let i=1; i<=maxWeeks; i++) {
@@ -1942,8 +1918,7 @@
                         </div>
                     `;
                 } else {
-                    // Empty week
-                     weekListEl.innerHTML += `
+                      weekListEl.innerHTML += `
                         <div class="week-item" style="opacity: 0.5;">
                             <div><div class="week-label">Week ${i}</div></div>
                             <div class="week-val" style="color: var(--gray)">-</div>
@@ -1953,12 +1928,14 @@
             }
         }
 
-        // Renders the portfolio growth chart
         function renderProfitChart(startDate, endDate) {
             if (profitChart) {
                 profitChart.destroy();
             }
-            const ctx = document.getElementById('profit-chart').getContext('2d');
+            
+            const canvas = document.getElementById('profit-chart');
+            if (!canvas) return; // Guard against missing canvas
+            const ctx = canvas.getContext('2d');
 
             if (cumulativeProfitHistory.length === 0) {
                 ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
@@ -1969,11 +1946,9 @@
                 return;
             }
 
-            // Find starting profit right before the period
             const lastPointBefore = cumulativeProfitHistory.filter(p => p.time < startDate).pop();
             const startingProfit = lastPointBefore ? lastPointBefore.cumulative : 0;
 
-            // Filter history for the selected period
             const periodHistory = cumulativeProfitHistory.filter(p => {
                 const pointTime = p.time.getTime();
                 const s = new Date(startDate).setHours(0,0,0,0);
@@ -1984,27 +1959,19 @@
             const labels = [];
             const dataPoints = [];
 
-            // Add a point for the start of the period to anchor the chart
-            // Note: If showing "All Time", we don't necessarily need a 0 anchor if the first trade is the anchor,
-            // but for filtering (e.g. Month), we want to see where we started relative to 0 growth OR relative to account balance.
-            // Here we show growth relative to the start of the period.
-            
             labels.push(startDate);
             dataPoints.push(startingProfit);
 
-            // Add the points from the period
             periodHistory.forEach(p => {
                 labels.push(p.time);
                 dataPoints.push(p.cumulative);
             });
 
-            // If there are no trades in the period, add an end point to draw a flat line
             if (periodHistory.length === 0) {
                 labels.push(endDate);
                 dataPoints.push(startingProfit);
             }
 
-            // Create gradient for the fill
             const gradient = ctx.createLinearGradient(0, 0, 0, 350);
             gradient.addColorStop(0, 'rgba(67, 97, 238, 0.3)');
             gradient.addColorStop(1, 'rgba(67, 97, 238, 0)');
@@ -2069,8 +2036,6 @@
             });
         }
 
-        // --- 4. DATA LOADING & PROCESSING ---
-
         async function loadData() {
             const refreshBtn = document.querySelector('.refresh-btn');
             const originalText = refreshBtn.innerHTML;
@@ -2078,27 +2043,31 @@
             refreshBtn.disabled = true;
 
             try {
-                // Fetch data with timestamp to prevent caching
                 const [tradeRes, signalRes] = await Promise.allSettled([
                     fetch('BEAN_TradeCloseLog.csv?t=' + new Date().getTime()),
                     fetch('Live_Signals.csv?t=' + new Date().getTime())
                 ]);
 
                 if (tradeRes.status === 'fulfilled') {
-                    const text = await tradeRes.value.text();
-                    processTradeData(text);
+                    if (tradeRes.value.ok) {
+                        const text = await tradeRes.value.text();
+                        processTradeData(text);
+                    } else {
+                        console.warn("Trade log file not found or error.");
+                        // We do NOT call showErrorState here to keep empty table instead of broken state
+                    }
                 }
 
                 if (signalRes.status === 'fulfilled') {
-                    const text = await signalRes.value.text();
-                    processSignalData(text);
+                    if (signalRes.value.ok) {
+                        const text = await signalRes.value.text();
+                        processSignalData(text);
+                    }
                 }
 
-                // Update Timestamp
                 const now = new Date();
                 document.getElementById('last-update').innerText = now.toLocaleTimeString();
                 
-                // Flash effect
                 const bar = document.querySelector('.update-time');
                 bar.style.background = 'var(--success)';
                 setTimeout(() => bar.style.background = 'rgba(67, 97, 238, 0.1)', 1000);
@@ -2114,7 +2083,6 @@
 
         function processTradeData(data) {
             const rows = data.split('\n').filter(r => r.trim() !== '');
-            // Skip header if present
             const dataRows = rows[0].includes('ExitTime') ? rows.slice(1) : rows;
 
             allTrades = [];
@@ -2123,26 +2091,33 @@
 
             dataRows.forEach(row => {
                 const cols = row.split(',');
-                if (cols.length < 5) return; // Skip malformed rows
+                if (cols.length < 5) return; 
 
                 const profit = parseFloat(cols[6]) || 0;
+                
+                // Add robust checking for direction to prevent crashes
+                let direction = cols[2] ? cols[2] : 'Unknown';
+                
                 const trade = {
-                    exitTime: cols[0].replace(/\./g, '-'), // Standardize date
+                    exitTime: cols[0].replace(/\./g, '-'), 
                     symbol: cols[1],
-                    direction: cols[2],
+                    direction: direction,
                     lot: cols[3],
                     entryPrice: cols[4],
                     exitPrice: cols[5],
                     profit: profit,
-                    result: cols[7]
+                    result: cols[7] || '-'
                 };
 
-                allTrades.push(trade);
-                totalProfit += profit;
-                if (profit > 0) winningTrades++;
+                // Only add trade if time is valid to prevent chart crashes
+                if (!isNaN(new Date(trade.exitTime))) {
+                    allTrades.push(trade);
+                    totalProfit += profit;
+                    if (profit > 0) winningTrades++;
+                }
             });
 
-            // Create cumulative profit history for the chart
+            // Create cumulative profit history
             const sortedTradesForHistory = [...allTrades].sort((a, b) => new Date(a.exitTime) - new Date(b.exitTime));
             let runningProfit = 0;
             cumulativeProfitHistory = sortedTradesForHistory.map(trade => {
@@ -2150,11 +2125,9 @@
                 return { time: new Date(trade.exitTime), cumulative: runningProfit };
             });
 
-            // Update Header Metrics
             document.getElementById('total-trades').textContent = allTrades.length;
             document.getElementById('total-profit').textContent = `$${totalProfit.toFixed(2)}`;
 
-            // Calculate Changes (Trends)
             const profitChange = totalProfit - previousMetrics.totalProfit;
             const tradesChange = allTrades.length - previousMetrics.totalTrades;
 
@@ -2166,21 +2139,22 @@
             tChangeEl.textContent = `${tradesChange > 0 ? '+' : ''}${tradesChange} today`;
             tChangeEl.className = `metric-change ${tradesChange > 0 ? 'positive' : 'negative'}`;
 
-            // Update History Table & Accuracy
             updateTableUI();
             calculateAccuracy();
 
-            // Refresh Calendar view with new data
             const dates = dateRangePicker.selectedDates;
             if(dates.length === 2) updateCalendarTrades(dates[0], dates[1]);
             
-            // Refresh Visual Calendar
             renderVisualCalendar();
+            
+            // Safely call setChartPeriod to update the chart
+            try {
+                setChartPeriod(currentChartPeriod);
+            } catch (e) {
+                console.error("Chart Error:", e);
+                // Swallow chart error so table doesn't crash
+            }
 
-            // Refresh the Profit Chart (preserving the current view filter)
-            setChartPeriod(currentChartPeriod);
-
-            // Save state for next comparison
             previousMetrics.totalProfit = totalProfit;
             previousMetrics.totalTrades = allTrades.length;
         }
@@ -2199,7 +2173,6 @@
                 return;
             }
 
-            // Show latest trades first
             const reversedTrades = [...allTrades].reverse();
             const start = (page - 1) * rowsPerPage;
             const end = start + rowsPerPage;
@@ -2209,20 +2182,25 @@
                 const tr = document.createElement('tr');
                 tr.style.animation = `fadeInRow 0.5s ease-out ${i * 0.05}s both`;
 
-                const typeClass = t.direction.toLowerCase().includes('buy') ? 'type-buy' : 'type-sell';
+                // SAFEGUARD: Ensure direction is a string before calling toLowerCase
+                const dir = typeof t.direction === 'string' ? t.direction : String(t.direction);
+                const typeClass = dir.toLowerCase().includes('buy') ? 'type-buy' : 'type-sell';
                 const resClass = t.profit >= 0 ? 'result-win' : 'result-loss';
                 const profitClass = t.profit >= 0 ? 'profit-positive' : 'profit-negative';
 
-                // Format Time
                 const timeStr = t.exitTime.includes(' ') ? t.exitTime.split(' ')[1] : t.exitTime;
+                
+                // SAFEGUARD: Handle missing result or exitPrice safely
+                const resultText = t.result ? t.result : (t.profit >= 0 ? 'WIN' : 'LOSS');
+                const exitPriceVal = !isNaN(parseFloat(t.exitPrice)) ? parseFloat(t.exitPrice).toFixed(5) : '0.00000';
 
                 tr.innerHTML = `
                     <td data-label="Time">${timeStr}</td>
                     <td data-label="Symbol"><div class="symbol"><b>${t.symbol}</b></div></td>
                     <td data-label="Type"><span class="type-badge ${typeClass}">${t.direction}</span></td>
-                    <td data-label="Price"><strong>${parseFloat(t.exitPrice).toFixed(5)}</strong></td>
+                    <td data-label="Price"><strong>${exitPriceVal}</strong></td>
                     <td data-label="Profit"><span class="${profitClass}">$${t.profit.toFixed(2)}</span></td>
-                    <td data-label="Result"><span class="result-badge ${resClass}">${t.result}</span></td>
+                    <td data-label="Result"><span class="result-badge ${resClass}">${resultText}</span></td>
                 `;
                 tbody.appendChild(tr);
             });
@@ -2236,7 +2214,6 @@
             container.innerHTML = '';
             if (totalPages <= 1) return;
 
-            // Previous button
             const prevBtn = document.createElement('button');
             prevBtn.innerHTML = '&laquo; Prev';
             prevBtn.className = 'pagination-btn';
@@ -2244,7 +2221,6 @@
             prevBtn.onclick = () => updateTableUI(currentPage - 1);
             container.appendChild(prevBtn);
 
-            // Determine which page numbers to show
             const page_links_to_show = 5;
             let startPage = Math.max(1, currentPage - Math.floor(page_links_to_show / 2));
             let endPage = Math.min(totalPages, startPage + page_links_to_show - 1);
@@ -2294,7 +2270,6 @@
                 container.appendChild(lastBtn);
             }
 
-            // Next button
             const nextBtn = document.createElement('button');
             nextBtn.innerHTML = 'Next &raquo;';
             nextBtn.className = 'pagination-btn';
@@ -2305,16 +2280,13 @@
 
         function processSignalData(data) {
             const rows = data.split('\n').filter(r => r.trim() !== '');
-            // Skip header if present
             const dataRows = rows[0].includes('Time') ? rows.slice(1) : rows;
 
             const tbody = document.getElementById('signal-history-body');
             tbody.innerHTML = '';
             
-            // Update Metric Count
             document.getElementById('active-signals').textContent = dataRows.length;
 
-            // Handle Alert (Most recent signal)
             if (dataRows.length > 0) {
                 const latest = dataRows[0].split(',');
                 if (latest.length >= 7) {
@@ -2332,7 +2304,6 @@
                 }
             }
 
-            // Populate Table (Top 10)
             dataRows.slice(0, 10).forEach((row, i) => {
                 const cols = row.split(',');
                 if(cols.length < 7) return;
@@ -2356,7 +2327,6 @@
         function calculateAccuracy() {
             if (allTrades.length === 0) return;
             
-            // Calculate based on last 50 trades (matching history view)
             const recent = allTrades.slice(-50);
             const wins = recent.filter(t => t.profit > 0).length;
             const rate = Math.round((wins / recent.length) * 100);
@@ -2380,7 +2350,6 @@
                 </td></tr>`;
         }
 
-        // Auto-refresh every 30 seconds
         setInterval(loadData, 30000);
     </script>
 </body>
