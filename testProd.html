@@ -232,6 +232,46 @@
             height: 350px;
         }
 
+        .chart-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid rgba(0,0,0,0.03);
+        }
+
+        .chart-period-selector {
+            display: flex;
+            background: rgba(0,0,0,0.03);
+            border-radius: 8px;
+            padding: 4px;
+            gap: 4px;
+        }
+
+        .chart-period-btn {
+            border: none;
+            background: transparent;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--gray);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .chart-period-btn:hover {
+            background: rgba(255,255,255,0.5);
+            color: var(--primary);
+        }
+
+        .chart-period-btn.active {
+            background: var(--card-bg);
+            color: var(--primary);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+
         /* --- VISUAL CALENDAR STYLES (UPDATED) --- */
         .calendar-split-container {
             display: grid;
@@ -285,7 +325,7 @@
             border-radius: 12px;
             min-height: 100px;
             padding: 10px;
-            border: 1px solid rgba(0,0,0,0.03);
+            border: 1px solid rgba(0, 0, 0, 0.03);
             display: flex;
             flex-direction: column;
             justify-content: space-between;
@@ -294,7 +334,7 @@
 
         .cal-cell:hover {
             transform: scale(1.02);
-            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
             z-index: 1;
         }
 
@@ -347,7 +387,7 @@
             height: 100%;
             display: flex;
             flex-direction: column;
-            border: 1px solid rgba(0,0,0,0.05);
+            border: 1px solid rgba(0, 0, 0, 0.05);
         }
 
         .month-stats-header {
@@ -356,7 +396,7 @@
             align-items: center;
             margin-bottom: 20px;
             padding-bottom: 15px;
-            border-bottom: 2px solid rgba(0,0,0,0.05);
+            border-bottom: 2px solid rgba(0, 0, 0, 0.05);
         }
 
         .week-item {
@@ -364,35 +404,63 @@
             padding: 15px;
             border-radius: 12px;
             margin-bottom: 12px;
-            border: 1px solid rgba(0,0,0,0.05);
+            border: 1px solid rgba(0, 0, 0, 0.05);
             display: flex;
             justify-content: space-between;
             align-items: center;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.02);
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.02);
         }
 
-        .week-label { font-size: 13px; color: var(--gray); font-weight: 600; text-transform: uppercase; }
-        .week-val { font-size: 16px; font-weight: 700; text-align: right; }
-        .week-meta { font-size: 11px; color: var(--gray); margin-top: 3px; font-weight: 500; }
+        .week-label {
+            font-size: 13px;
+            color: var(--gray);
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .week-val {
+            font-size: 16px;
+            font-weight: 700;
+            text-align: right;
+        }
+
+        .week-meta {
+            font-size: 11px;
+            color: var(--gray);
+            margin-top: 3px;
+            font-weight: 500;
+        }
 
         .mini-stat-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 12px;
-            margin-top: auto; 
+            margin-top: auto;
             padding-top: 20px;
-            border-top: 2px solid rgba(0,0,0,0.05);
+            border-top: 2px solid rgba(0, 0, 0, 0.05);
         }
-        
+
         .mini-stat {
             background: white;
             padding: 12px;
             border-radius: 10px;
             text-align: center;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.02);
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.02);
         }
-        .mini-stat-label { font-size: 11px; color: var(--gray); font-weight: 600; text-transform: uppercase; margin-bottom: 5px; }
-        .mini-stat-value { font-size: 14px; font-weight: 800; color: var(--dark); }
+
+        .mini-stat-label {
+            font-size: 11px;
+            color: var(--gray);
+            font-weight: 600;
+            text-transform: uppercase;
+            margin-bottom: 5px;
+        }
+
+        .mini-stat-value {
+            font-size: 14px;
+            font-weight: 800;
+            color: var(--dark);
+        }
 
 
         /* Calendar Section (Old List) */
@@ -898,7 +966,7 @@
 
         .pagination-btn {
             padding: 10px 15px;
-            border: 1px solid rgba(0,0,0,0.1);
+            border: 1px solid rgba(0, 0, 0, 0.1);
             background: var(--card-bg);
             color: var(--primary);
             font-weight: 600;
@@ -1033,23 +1101,30 @@
             .summary-stats {
                 grid-template-columns: repeat(2, 1fr);
             }
-            
+
             .calendar-grid {
-                grid-template-columns: repeat(4, 1fr); 
+                grid-template-columns: repeat(4, 1fr);
             }
         }
-        
+
         @media (max-width: 600px) {
             .calendar-grid {
                 grid-template-columns: repeat(7, 1fr);
                 gap: 5px;
             }
+
             .cal-cell {
                 min-height: 60px;
                 padding: 5px;
             }
-            .cal-pnl { font-size: 10px; }
-            .cal-trades { display: none; }
+
+            .cal-pnl {
+                font-size: 10px;
+            }
+
+            .cal-trades {
+                display: none;
+            }
         }
 
         @media (max-width: 768px) {
@@ -1184,12 +1259,23 @@
         </div>
 
         <div class="chart-section">
-            <div class="section-header" style="margin: 0 0 20px 0; border-bottom: none;">
-                <h2><i class="fas fa-chart-area"></i> Portfolio Growth</h2>
-                <div style="font-size: 14px; color: var(--gray);" id="chart-info">
-                    Visualizing cumulative profit over time
+            <div class="chart-header">
+                <div style="display:flex; align-items:center; gap:10px;">
+                    <h2 style="font-size:20px; font-weight:700;"><i class="fas fa-chart-area" style="color:var(--primary)"></i> Portfolio Growth</h2>
+                    <div style="font-size: 14px; color: var(--gray);" id="chart-info">
+                        All Time
+                    </div>
+                </div>
+                
+                <div class="chart-period-selector">
+                    <button class="chart-period-btn" onclick="setChartPeriod('day')">1D</button>
+                    <button class="chart-period-btn" onclick="setChartPeriod('week')">1W</button>
+                    <button class="chart-period-btn" onclick="setChartPeriod('month')">1M</button>
+                    <button class="chart-period-btn" onclick="setChartPeriod('year')">1Y</button>
+                    <button class="chart-period-btn active" onclick="setChartPeriod('all')">ALL</button>
                 </div>
             </div>
+            
             <div class="chart-container">
                 <canvas id="profit-chart"></canvas>
             </div>
@@ -1202,14 +1288,16 @@
                         <h2><i class="fas fa-calendar-check"></i> Monthly Performance</h2>
                         <div style="display:flex; align-items:center; gap: 10px;">
                             <button class="cal-nav-btn" onclick="changeCalendarMonth(-1)"><i class="fas fa-chevron-left"></i></button>
-                            <div id="visual-calendar-month" style="font-weight:700; font-size: 18px; width: 150px; text-align:center;">
+                            <div id="visual-calendar-month"
+                                style="font-weight:700; font-size: 18px; width: 150px; text-align:center;">
                                 Month Year
                             </div>
                             <button class="cal-nav-btn" onclick="changeCalendarMonth(1)"><i class="fas fa-chevron-right"></i></button>
                         </div>
                     </div>
-                    
-                    <div class="calendar-grid-header" style="display:grid; grid-template-columns: repeat(7, 1fr); margin-bottom: 10px;">
+
+                    <div class="calendar-grid-header"
+                        style="display:grid; grid-template-columns: repeat(7, 1fr); margin-bottom: 10px;">
                         <div class="day-header">Sun</div>
                         <div class="day-header">Mon</div>
                         <div class="day-header">Tue</div>
@@ -1220,17 +1308,18 @@
                     </div>
 
                     <div id="visual-calendar-body" class="calendar-grid">
-                        </div>
+                    </div>
                 </div>
 
                 <div class="weekly-stats-container">
                     <div class="month-stats-header">
                         <div style="font-weight:700; font-size:16px;">Monthly Stats</div>
-                        <div id="month-total-pnl" style="font-weight:800; font-size:16px; color:var(--success)">$0.00</div>
+                        <div id="month-total-pnl" style="font-weight:800; font-size:16px; color:var(--success)">$0.00
+                        </div>
                     </div>
 
                     <div id="weekly-breakdown-list">
-                        </div>
+                    </div>
 
                     <div class="mini-stat-grid">
                         <div class="mini-stat">
@@ -1245,7 +1334,7 @@
                             <div class="mini-stat-label">Avg Loss</div>
                             <div class="mini-stat-value" id="month-avg-loss" style="color:var(--danger)">$0</div>
                         </div>
-                         <div class="mini-stat">
+                        <div class="mini-stat">
                             <div class="mini-stat-label">Trades</div>
                             <div class="mini-stat-value" id="month-total-trades">0</div>
                         </div>
@@ -1462,7 +1551,8 @@
         let dateRangePicker;
         let profitChart;
         let cumulativeProfitHistory = [];
-        
+        let currentChartPeriod = 'all'; // Default to All Time
+
         // Visual Calendar State
         let calendarDate = new Date(); // Defaults to today
 
@@ -1495,7 +1585,55 @@
 
         // --- 3. CORE FUNCTIONS ---
 
-        // Controls the Day/Week/Month/All buttons
+        // Controls the Chart Filters (1D, 1W, 1M, 1Y, ALL)
+        function setChartPeriod(period) {
+            currentChartPeriod = period;
+            
+            // Update buttons
+            document.querySelectorAll('.chart-period-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+
+            // Calculate dates based on period relative to today/now
+            const today = new Date();
+            let startDate = new Date();
+            const endDate = new Date(); // Always end now
+
+            // Update Label
+            const chartInfo = document.getElementById('chart-info');
+
+            switch(period) {
+                case 'day':
+                    startDate.setHours(0,0,0,0);
+                    chartInfo.textContent = "Today";
+                    break;
+                case 'week':
+                    startDate.setDate(today.getDate() - 7);
+                    chartInfo.textContent = "Past 7 Days";
+                    break;
+                case 'month':
+                    startDate.setMonth(today.getMonth() - 1);
+                    chartInfo.textContent = "Past 30 Days";
+                    break;
+                case 'year':
+                    startDate.setFullYear(today.getFullYear() - 1);
+                    chartInfo.textContent = "Past Year";
+                    break;
+                case 'all':
+                    if (cumulativeProfitHistory.length > 0) {
+                        startDate = new Date(cumulativeProfitHistory[0].time);
+                    } else {
+                        startDate = new Date(2000, 0, 1);
+                    }
+                    chartInfo.textContent = "All Time";
+                    break;
+            }
+
+            renderProfitChart(startDate, endDate);
+        }
+
+        // Controls the Day/Week/Month/All buttons for TRADING JOURNAL
         function setPeriod(period) {
             currentPeriod = period;
 
@@ -1588,9 +1726,6 @@
 
             // Update the Trade List for this period
             renderPeriodTrades(filteredTrades);
-            
-            // Update Profit Chart
-            renderProfitChart(startDate, endDate);
 
             // Update Text Label
             const formatDate = (date) => date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
@@ -1838,18 +1973,22 @@
             const lastPointBefore = cumulativeProfitHistory.filter(p => p.time < startDate).pop();
             const startingProfit = lastPointBefore ? lastPointBefore.cumulative : 0;
 
-            // Filter history for the selected period, ensuring we cover the full days
+            // Filter history for the selected period
             const periodHistory = cumulativeProfitHistory.filter(p => {
                 const pointTime = p.time.getTime();
-                const startTime = new Date(startDate).setHours(0, 0, 0, 0);
-                const endTime = new Date(endDate).setHours(23, 59, 59, 999);
-                return pointTime >= startTime && pointTime <= endTime;
+                const s = new Date(startDate).setHours(0,0,0,0);
+                const e = new Date(endDate).setHours(23,59,59,999);
+                return pointTime >= s && pointTime <= e;
             });
 
             const labels = [];
             const dataPoints = [];
 
             // Add a point for the start of the period to anchor the chart
+            // Note: If showing "All Time", we don't necessarily need a 0 anchor if the first trade is the anchor,
+            // but for filtering (e.g. Month), we want to see where we started relative to 0 growth OR relative to account balance.
+            // Here we show growth relative to the start of the period.
+            
             labels.push(startDate);
             dataPoints.push(startingProfit);
 
@@ -2037,6 +2176,9 @@
             
             // Refresh Visual Calendar
             renderVisualCalendar();
+
+            // Refresh the Profit Chart (preserving the current view filter)
+            setChartPeriod(currentChartPeriod);
 
             // Save state for next comparison
             previousMetrics.totalProfit = totalProfit;
