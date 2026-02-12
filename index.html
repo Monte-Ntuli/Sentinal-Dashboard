@@ -9,24 +9,40 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <link rel="stylesheet" href="https://npmcdn.com/flatpickr/dist/themes/dark.css">
 
     <link rel="icon" type="image/png" href="favicon.png" />
     <link rel="icon" href="favicon.png" />
     <style>
         :root {
+            /* Light Mode Variables (Default) */
             --primary: #4361ee;
             --primary-dark: #3a56d4;
             --success: #06d6a0;
             --danger: #ef476f;
             --warning: #ffd166;
-            --dark: #1a1a2e;
-            --light: #f8f9fa;
+            --dark: #1a1a2e;       /* Text Color */
+            --light: #f8f9fa;      /* Secondary Backgrounds */
             --gray: #8b8ca7;
             --card-bg: #ffffff;
             --shadow: rgba(149, 157, 165, 0.1);
             --gradient: linear-gradient(135deg, #4361ee 0%, #3a0ca3 100%);
             --ai-gradient: linear-gradient(135deg, #7b2ff7 0%, #f72585 100%);
             --calendar-gradient: linear-gradient(135deg, #4cc9f0 0%, #4361ee 100%);
+            --body-bg: linear-gradient(135deg, #f5f7fa 0%, #e4edf5 100%);
+            --border-color: rgba(0, 0, 0, 0.05);
+        }
+
+        /* --- DARK MODE OVERRIDES --- */
+        body.dark-mode {
+            --primary: #5b75f0; /* Slightly lighter for contrast */
+            --dark: #e6e6eb;    /* Text becomes light */
+            --light: #2b2b40;   /* Secondary backgrounds become dark */
+            --card-bg: #1e1e2d; /* Dark Blue-Gray Card Background */
+            --gray: #a0a0b0;
+            --shadow: rgba(0, 0, 0, 0.3); /* Stronger shadow for depth */
+            --body-bg: #151521; /* Solid Dark Background */
+            --border-color: rgba(255, 255, 255, 0.08);
         }
 
         * {
@@ -34,10 +50,11 @@
             padding: 0;
             box-sizing: border-box;
             font-family: 'Inter', sans-serif;
+            transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
         }
 
         body {
-            background: linear-gradient(135deg, #f5f7fa 0%, #e4edf5 100%);
+            background: var(--body-bg);
             color: var(--dark);
             min-height: 100vh;
             padding: 20px;
@@ -98,6 +115,29 @@
             display: flex;
             align-items: center;
             gap: 15px;
+            z-index: 2;
+        }
+
+        /* Theme Toggle Button */
+        .theme-toggle {
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            color: white;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(5px);
+        }
+
+        .theme-toggle:hover {
+            background: rgba(255, 255, 255, 0.4);
+            transform: rotate(15deg);
         }
 
         .live-badge {
@@ -238,12 +278,12 @@
             align-items: center;
             margin-bottom: 20px;
             padding-bottom: 15px;
-            border-bottom: 2px solid rgba(0,0,0,0.03);
+            border-bottom: 2px solid var(--border-color);
         }
 
         .chart-period-selector {
             display: flex;
-            background: rgba(0,0,0,0.03);
+            background: var(--light);
             border-radius: 8px;
             padding: 4px;
             gap: 4px;
@@ -262,7 +302,7 @@
         }
 
         .chart-period-btn:hover {
-            background: rgba(255,255,255,0.5);
+            background: rgba(125, 125, 125, 0.1);
             color: var(--primary);
         }
 
@@ -321,11 +361,11 @@
         }
 
         .cal-cell {
-            background: #f8f9fa;
+            background: var(--light);
             border-radius: 12px;
             min-height: 100px;
             padding: 10px;
-            border: 1px solid rgba(0, 0, 0, 0.03);
+            border: 1px solid var(--border-color);
             display: flex;
             flex-direction: column;
             justify-content: space-between;
@@ -334,7 +374,7 @@
 
         .cal-cell:hover {
             transform: scale(1.02);
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+            box-shadow: 0 5px 15px var(--shadow);
             z-index: 1;
         }
 
@@ -349,11 +389,22 @@
             border: 1px solid rgba(6, 214, 160, 0.3);
             color: #047a5b;
         }
+        
+        /* Dark mode specific override for text inside profit cells to remain readable */
+        body.dark-mode .cal-cell.profit {
+            color: #4ade80; /* Brighter green for dark mode */
+            background: rgba(6, 214, 160, 0.1);
+        }
 
         .cal-cell.loss {
             background: rgba(239, 71, 111, 0.15);
             border: 1px solid rgba(239, 71, 111, 0.3);
             color: #a81c3b;
+        }
+
+        body.dark-mode .cal-cell.loss {
+            color: #f87171; /* Brighter red for dark mode */
+            background: rgba(239, 71, 111, 0.1);
         }
 
         .cal-date {
@@ -381,13 +432,13 @@
 
         /* --- WEEKLY STATS SIDEBAR --- */
         .weekly-stats-container {
-            background: #f8f9fa;
+            background: var(--light);
             border-radius: 16px;
             padding: 20px;
             height: 100%;
             display: flex;
             flex-direction: column;
-            border: 1px solid rgba(0, 0, 0, 0.05);
+            border: 1px solid var(--border-color);
         }
 
         .month-stats-header {
@@ -396,15 +447,15 @@
             align-items: center;
             margin-bottom: 20px;
             padding-bottom: 15px;
-            border-bottom: 2px solid rgba(0, 0, 0, 0.05);
+            border-bottom: 2px solid var(--border-color);
         }
 
         .week-item {
-            background: white;
+            background: var(--card-bg);
             padding: 15px;
             border-radius: 12px;
             margin-bottom: 12px;
-            border: 1px solid rgba(0, 0, 0, 0.05);
+            border: 1px solid var(--border-color);
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -437,11 +488,11 @@
             gap: 12px;
             margin-top: auto;
             padding-top: 20px;
-            border-top: 2px solid rgba(0, 0, 0, 0.05);
+            border-top: 2px solid var(--border-color);
         }
 
         .mini-stat {
-            background: white;
+            background: var(--card-bg);
             padding: 12px;
             border-radius: 10px;
             text-align: center;
@@ -461,7 +512,6 @@
             font-weight: 800;
             color: var(--dark);
         }
-
 
         /* Calendar Section (Old List) */
         .calendar-section {
@@ -531,16 +581,21 @@
         }
 
         .date-picker-container {
-            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            background: var(--light);
             padding: 20px;
             border-radius: 16px;
-            border: 1px solid rgba(0, 0, 0, 0.05);
+            border: 1px solid var(--border-color);
         }
 
         .flatpickr-calendar {
             width: 100% !important;
             box-shadow: none !important;
             border: none !important;
+            background: transparent !important;
+        }
+
+        body.dark-mode .flatpickr-calendar {
+            background: var(--card-bg) !important;
         }
 
         .flatpickr-day.selected {
@@ -557,7 +612,7 @@
             border-radius: 16px;
             padding: 25px;
             margin-top: 20px;
-            border: 1px solid rgba(0, 0, 0, 0.05);
+            border: 1px solid var(--border-color);
         }
 
         .summary-stats {
@@ -570,9 +625,9 @@
         .summary-stat {
             text-align: center;
             padding: 20px;
-            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            background: var(--light);
             border-radius: 12px;
-            border: 1px solid rgba(0, 0, 0, 0.05);
+            border: 1px solid var(--border-color);
         }
 
         .summary-stat .value {
@@ -595,7 +650,7 @@
             max-height: 400px;
             overflow-y: auto;
             border-radius: 12px;
-            border: 1px solid rgba(0, 0, 0, 0.05);
+            border: 1px solid var(--border-color);
         }
 
         .trade-item {
@@ -603,12 +658,16 @@
             justify-content: space-between;
             align-items: center;
             padding: 15px 20px;
-            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+            border-bottom: 1px solid var(--border-color);
             transition: background 0.3s ease;
         }
 
         .trade-item:hover {
             background: rgba(67, 97, 238, 0.03);
+        }
+
+        body.dark-mode .trade-item:hover {
+            background: rgba(255, 255, 255, 0.05);
         }
 
         .trade-item:last-child {
@@ -876,7 +935,7 @@
         }
 
         tbody tr {
-            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+            border-bottom: 1px solid var(--border-color);
             transition: all 0.3s ease;
         }
 
@@ -884,6 +943,10 @@
             background: rgba(67, 97, 238, 0.03);
             transform: scale(1.005);
             box-shadow: 0 5px 15px rgba(0, 0, 0, 0.03);
+        }
+
+        body.dark-mode tbody tr:hover {
+            background: rgba(255,255,255,0.05);
         }
 
         tbody tr td {
@@ -994,6 +1057,12 @@
             cursor: not-allowed;
             border-color: #dee2e6;
         }
+        
+        body.dark-mode .pagination-btn:disabled {
+            background: #333;
+            color: #555;
+            border-color: #444;
+        }
 
         .confidence-badge {
             padding: 4px 10px;
@@ -1025,6 +1094,13 @@
             font-size: 14px;
             padding: 20px;
             animation: fadeIn 1s ease-out 0.6s both;
+        }
+        
+        /* Input overrides for dark mode */
+        body.dark-mode input {
+            background: var(--light);
+            color: white;
+            border-color: rgba(255,255,255,0.1) !important;
         }
 
         /* Animations */
@@ -1068,18 +1144,6 @@
             from {
                 opacity: 0;
                 transform: translateX(-10px);
-            }
-
-            to {
-                opacity: 1;
-                transform: translateX(0);
-            }
-        }
-
-        @keyframes slideInRight {
-            from {
-                opacity: 0;
-                transform: translateX(20px);
             }
 
             to {
@@ -1167,7 +1231,7 @@
             tbody tr {
                 display: block;
                 margin-bottom: 20px;
-                border: 1px solid rgba(0, 0, 0, 0.05);
+                border: 1px solid var(--border-color);
                 border-radius: 12px;
                 padding: 15px;
             }
@@ -1177,7 +1241,7 @@
                 justify-content: space-between;
                 align-items: center;
                 padding: 10px 0;
-                border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+                border-bottom: 1px solid var(--border-color);
             }
 
             tbody tr td:last-child {
@@ -1201,6 +1265,9 @@
                 <p>AI Neural Trading System • Real-time Performance Dashboard</p>
             </div>
             <div class="header-right">
+                <button class="theme-toggle" onclick="toggleTheme()" title="Toggle Dark Mode">
+                    <i class="fas fa-moon"></i>
+                </button>
                 <div class="live-badge">
                     <div class="pulse"></div>
                     <span>LIVE TRADING</span>
@@ -1562,6 +1629,16 @@
 
         // --- 2. INITIALIZATION ---
         document.addEventListener('DOMContentLoaded', function () {
+            // Check for saved theme preference
+            const savedTheme = localStorage.getItem('sentinel_theme');
+            if(savedTheme === 'dark') {
+                document.body.classList.add('dark-mode');
+                // Update icon
+                const icon = document.querySelector('.theme-toggle i');
+                icon.classList.remove('fa-moon');
+                icon.classList.add('fa-sun');
+            }
+
             // Initialize Calendar
             dateRangePicker = flatpickr("#date-range-picker", {
                 mode: "range",
@@ -1582,6 +1659,30 @@
             // Initial render of visual calendar
             renderVisualCalendar();
         });
+
+        // --- THEME TOGGLE FUNCTION ---
+        function toggleTheme() {
+            document.body.classList.toggle('dark-mode');
+            const isDark = document.body.classList.contains('dark-mode');
+            
+            // Save preference
+            localStorage.setItem('sentinel_theme', isDark ? 'dark' : 'light');
+            
+            // Toggle Icon
+            const icon = document.querySelector('.theme-toggle i');
+            if(isDark) {
+                icon.classList.remove('fa-moon');
+                icon.classList.add('fa-sun');
+            } else {
+                icon.classList.remove('fa-sun');
+                icon.classList.add('fa-moon');
+            }
+
+            // Force chart update to pick up new CSS variables/colors if strictly bound
+            if(profitChart) {
+                profitChart.update();
+            }
+        }
 
         // --- 3. CORE FUNCTIONS ---
 
@@ -1723,7 +1824,6 @@
 
             renderPeriodTrades(filteredTrades);
             
-            // Note: We don't render chart here anymore, it's handled by setChartPeriod
             const formatDate = (date) => date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
             if (startDate.getTime() === endDate.getTime()) {
                 document.getElementById('selected-period').textContent = formatDate(startDate);
@@ -1918,7 +2018,7 @@
                         </div>
                     `;
                 } else {
-                      weekListEl.innerHTML += `
+                       weekListEl.innerHTML += `
                         <div class="week-item" style="opacity: 0.5;">
                             <div><div class="week-label">Week ${i}</div></div>
                             <div class="week-val" style="color: var(--gray)">-</div>
@@ -1984,7 +2084,7 @@
                         label: 'Cumulative Profit',
                         data: dataPoints,
                         backgroundColor: gradient,
-                        borderColor: 'var(--primary)',
+                        borderColor: 'var(--primary)', // This might need a hard refresh to pick up new variable
                         borderWidth: 2.5,
                         pointRadius: 0,
                         pointHoverRadius: 6,
