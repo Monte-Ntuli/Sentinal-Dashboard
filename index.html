@@ -1265,6 +1265,10 @@
                 <p>AI Neural Trading System • Real-time Performance Dashboard</p>
             </div>
             <div class="header-right">
+                <select id="account-selector" onchange="switchAccount()" style="background: rgba(255,255,255,0.2); color: white; border: none; padding: 10px 15px; border-radius: 8px; font-weight: 600; outline: none; cursor: pointer; backdrop-filter: blur(5px);">
+                    <option value="Acc1" style="color: black;">Account 1 (Main)</option>
+                    <option value="Acc2" style="color: black;">Account 2 (Secondary)</option>
+                </select>
                 <button class="theme-toggle" onclick="toggleTheme()" title="Toggle Dark Mode">
                     <i class="fas fa-moon"></i>
                 </button>
@@ -1607,6 +1611,8 @@
 
     <script>
         // --- 1. GLOBAL STATE ---
+        let currentAccount = 'Acc1';
+
         let previousMetrics = {
             totalTrades: 0,
             totalProfit: 0,
@@ -1682,6 +1688,19 @@
             if(profitChart) {
                 profitChart.update();
             }
+        }
+
+        // --- ACCOUNT SWITCH FUNCTION ---
+        function switchAccount() {
+            currentAccount = document.getElementById('account-selector').value;
+            
+            // Clear current data immediately so the UI doesn't look stuck
+            allTrades = [];
+            cumulativeProfitHistory = [];
+            document.getElementById('table-body').innerHTML = '<tr><td colspan="6"><div class="empty-state"><i class="fas fa-spinner fa-spin"></i><h3>Loading Account Data...</h3></div></td></tr>';
+            
+            // Fetch the new account's data
+            loadData(); 
         }
 
         // --- 3. CORE FUNCTIONS ---
@@ -2144,8 +2163,9 @@
 
             try {
                 const [tradeRes, signalRes] = await Promise.allSettled([
-                    fetch('BEAN_TradeCloseLog.csv?t=' + new Date().getTime()),
-                    fetch('Live_Signals.csv?t=' + new Date().getTime())
+                    // FIX: Notice the backticks (`) and ${currentAccount}
+                    fetch(`BEAN_TradeCloseLog_${currentAccount}.csv?t=` + new Date().getTime()),
+                    fetch(`Live_Signals_${currentAccount}.csv?t=` + new Date().getTime())
                 ]);
 
                 if (tradeRes.status === 'fulfilled') {
