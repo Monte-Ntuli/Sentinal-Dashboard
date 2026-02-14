@@ -2163,25 +2163,28 @@
 
             try {
                 const [tradeRes, signalRes] = await Promise.allSettled([
-                    // FIX: Notice the backticks (`) and ${currentAccount}
                     fetch(`BEAN_TradeCloseLog_${currentAccount}.csv?t=` + new Date().getTime()),
                     fetch(`Live_Signals_${currentAccount}.csv?t=` + new Date().getTime())
                 ]);
 
+                // Handle Trade Data (Table, Chart, Calendar)
                 if (tradeRes.status === 'fulfilled') {
                     if (tradeRes.value.ok) {
                         const text = await tradeRes.value.text();
                         processTradeData(text);
                     } else {
-                        console.warn("Trade log file not found or error.");
-                        // We do NOT call showErrorState here to keep empty table instead of broken state
+                        console.warn("Trade log file not found. Clearing dashboard for this account.");
+                        processTradeData(""); // Forces chart, calendar, and table to wipe clean
                     }
                 }
 
+                // Handle Live Signals
                 if (signalRes.status === 'fulfilled') {
                     if (signalRes.value.ok) {
                         const text = await signalRes.value.text();
                         processSignalData(text);
+                    } else {
+                        processSignalData(""); // Forces signals to wipe clean
                     }
                 }
 
@@ -2200,7 +2203,7 @@
                 refreshBtn.disabled = false;
             }
         }
-
+        
         function processTradeData(data) {
             const rows = data.split('\n').filter(r => r.trim() !== '');
             const dataRows = rows[0].includes('ExitTime') ? rows.slice(1) : rows;
