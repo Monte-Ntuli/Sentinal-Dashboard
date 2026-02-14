@@ -5,12 +5,12 @@ SET "WEB_DIR=C:\Users\Public\Bean_Website"
 SET "SOURCE_DIR=C:\Users\E7240\AppData\Roaming\MetaQuotes\Terminal\Common\Files"
 
 echo ---------------------------------------------------
-echo HOURLY GITHUB SYNC INITIALIZED
+echo 15-MINUTE GITHUB SYNC INITIALIZED
 echo ---------------------------------------------------
 
 :LOOP
 echo.
-echo [%DATE% %TIME%] Starting hourly update...
+echo [%DATE% %TIME%] Starting 15-minute update...
 
 :: 1. Navigate to Web Directory
 cd /d "%WEB_DIR%"
@@ -21,7 +21,7 @@ copy /Y "%SOURCE_DIR%\Live_Signals.csv" "Live_Signals.csv" >nul
 
 :: 3. Git Sequence
 git add .
-git commit -m "Hourly Update: %date% %time%"
+git commit -m "Auto Update: %date% %time%"
 
 :: 4. Push to GitHub
 echo Pushing to GitHub...
@@ -29,9 +29,9 @@ git push origin main
 
 echo.
 echo Update complete.
-echo Waiting 1 hour (3600 seconds) for next cycle...
+echo Waiting 15 minutes (900 seconds) for next cycle...
 echo ---------------------------------------------------
 
-:: Wait 3600 seconds (1 Hour)
-timeout /t 3600 /nobreak >nul
+:: Wait 900 seconds (15 Minutes)
+timeout /t 900 /nobreak >nul
 goto LOOP
