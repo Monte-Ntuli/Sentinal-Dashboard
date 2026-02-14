@@ -1,29 +1,27 @@
 @echo off
 :: --- CONFIGURATION ---
 SET "WEB_DIR=C:\Users\Public\Bean_Website"
-:: Ensure this matches your specific AppData path
-SET "SOURCE_DIR=C:\Users\E7240\AppData\Roaming\MetaQuotes\Terminal\Common\Files"
 
 echo ---------------------------------------------------
-echo 15-MINUTE GITHUB SYNC INITIALIZED
+echo MULTI-NODE GITHUB SYNC INITIALIZED (LOOP MODE)
 echo ---------------------------------------------------
 
 :LOOP
 echo.
-echo [%DATE% %TIME%] Starting 15-minute update...
+echo [%DATE% %TIME%] Starting update cycle...
 
 :: 1. Navigate to Web Directory
 cd /d "%WEB_DIR%"
 
-:: 2. Force copy the latest CSVs from MT5 to ensure fresh data
-copy /Y "%SOURCE_DIR%\BEAN_TradeCloseLog.csv" "BEAN_TradeCloseLog.csv" >nul
-copy /Y "%SOURCE_DIR%\Live_Signals.csv" "Live_Signals.csv" >nul
-
-:: 3. Git Sequence
+:: 2. Save local changes from this specific laptop
 git add .
 git commit -m "Auto Update: %date% %time%"
 
-:: 4. Push to GitHub
+:: 3. Safely pull and stack any new files from the other laptop
+echo Pulling latest changes from the central database...
+git pull --rebase origin main
+
+:: 4. Push everything combined back up to GitHub
 echo Pushing to GitHub...
 git push origin main
 
