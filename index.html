@@ -2048,49 +2048,52 @@
         }
 
         function renderProfitChart(startDate, endDate) {
-            if (profitChart) {
-                profitChart.destroy();
-            }
-            
             const canvas = document.getElementById('profit-chart');
-            if (!canvas) return; // Guard against missing canvas
+            if (!canvas) return;
             const ctx = canvas.getContext('2d');
 
+            let labels = [];
+            let dataPoints = [];
+
+            // 1. Calculate Data
             if (cumulativeProfitHistory.length === 0) {
-                ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
-                ctx.font = "16px 'Inter'";
-                ctx.fillStyle = 'var(--gray)';
-                ctx.textAlign = 'center';
-                ctx.fillText('No historical data to draw chart.', ctx.canvas.width / 2, ctx.canvas.height / 2);
+                // Feed it a flatline so it animates to zero
+                labels = [startDate, endDate];
+                dataPoints = [0, 0];
+            } else {
+                const lastPointBefore = cumulativeProfitHistory.filter(p => p.time < startDate).pop();
+                const startingProfit = lastPointBefore ? lastPointBefore.cumulative : 0;
+
+                const periodHistory = cumulativeProfitHistory.filter(p => {
+                    const pointTime = p.time.getTime();
+                    const s = new Date(startDate).setHours(0,0,0,0);
+                    const e = new Date(endDate).setHours(23,59,59,999);
+                    return pointTime >= s && pointTime <= e;
+                });
+
+                labels.push(startDate);
+                dataPoints.push(startingProfit);
+
+                periodHistory.forEach(p => {
+                    labels.push(p.time);
+                    dataPoints.push(p.cumulative);
+                });
+
+                if (periodHistory.length === 0) {
+                    labels.push(endDate);
+                    dataPoints.push(startingProfit);
+                }
+            }
+
+            // 2. SMOOTH ANIMATION: If chart exists, just update the data instead of destroying it
+            if (profitChart) {
+                profitChart.data.labels = labels;
+                profitChart.data.datasets[0].data = dataPoints;
+                profitChart.update();
                 return;
             }
 
-            const lastPointBefore = cumulativeProfitHistory.filter(p => p.time < startDate).pop();
-            const startingProfit = lastPointBefore ? lastPointBefore.cumulative : 0;
-
-            const periodHistory = cumulativeProfitHistory.filter(p => {
-                const pointTime = p.time.getTime();
-                const s = new Date(startDate).setHours(0,0,0,0);
-                const e = new Date(endDate).setHours(23,59,59,999);
-                return pointTime >= s && pointTime <= e;
-            });
-
-            const labels = [];
-            const dataPoints = [];
-
-            labels.push(startDate);
-            dataPoints.push(startingProfit);
-
-            periodHistory.forEach(p => {
-                labels.push(p.time);
-                dataPoints.push(p.cumulative);
-            });
-
-            if (periodHistory.length === 0) {
-                labels.push(endDate);
-                dataPoints.push(startingProfit);
-            }
-
+            // 3. Draw chart for the very first time
             const gradient = ctx.createLinearGradient(0, 0, 0, 350);
             gradient.addColorStop(0, 'rgba(67, 97, 238, 0.3)');
             gradient.addColorStop(1, 'rgba(67, 97, 238, 0)');
@@ -2103,7 +2106,7 @@
                         label: 'Cumulative Profit',
                         data: dataPoints,
                         backgroundColor: gradient,
-                        borderColor: 'var(--primary)', // This might need a hard refresh to pick up new variable
+                        borderColor: 'var(--primary)',
                         borderWidth: 2.5,
                         pointRadius: 0,
                         pointHoverRadius: 6,
@@ -2120,16 +2123,13 @@
                     scales: {
                         x: {
                             type: 'time',
-                            time: {
-                                unit: 'day',
-                                tooltipFormat: 'MMM dd, yyyy HH:mm'
-                            },
+                            time: { unit: 'day', tooltipFormat: 'MMM dd, yyyy HH:mm' },
                             grid: { display: false },
                             ticks: { color: 'var(--gray)', font: { size: 12 }, maxRotation: 0, autoSkip: true, maxTicksLimit: 7 }
                         },
                         y: {
                             beginAtZero: false,
-                            grid: { color: 'rgba(0,0,0,0.05)', drawBorder: false, },
+                            grid: { color: 'rgba(0,0,0,0.05)', drawBorder: false },
                             ticks: {
                                 color: 'var(--gray)', font: { size: 12 },
                                 callback: function(value) { return '$' + value.toLocaleString(); }
@@ -2144,8 +2144,7 @@
                             bodyFont: { size: 12 }, padding: 12, cornerRadius: 8, displayColors: false,
                             callbacks: {
                                 label: function(context) {
-                                    const value = context.parsed.y;
-                                    return 'Cumulative P/L: ' + new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(value);
+                                    return 'Cumulative P/L: ' + new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(context.parsed.y);
                                 }
                             }
                         }
@@ -2203,10 +2202,11 @@
                 refreshBtn.disabled = false;
             }
         }
-        
-        function processTradeData(data) {
+
+       function processTradeData(data) {
             const rows = data.split('\n').filter(r => r.trim() !== '');
-            const dataRows = rows[0].includes('ExitTime') ? rows.slice(1) : rows;
+            // FIX: Safely check if rows exist before looking for headers
+            const dataRows = rows.length > 0 && rows[0].includes('ExitTime') ? rows.slice(1) : rows;
 
             allTrades = [];
             let totalProfit = 0;
@@ -2217,12 +2217,9 @@
                 if (cols.length < 5) return; 
 
                 const profit = parseFloat(cols[6]) || 0;
-                
-                // Add robust checking for direction to prevent crashes
                 let direction = cols[2] ? cols[2] : 'Unknown';
                 
                 const trade = {
-                    // Replaces the space with a 'T' for iOS/Safari compatibility
                     exitTime: cols[0].replace(/\./g, '-').replace(' ', 'T'), 
                     symbol: cols[1].trim(),
                     direction: direction.trim(),
@@ -2230,11 +2227,9 @@
                     entryPrice: cols[4].trim(),
                     exitPrice: cols[5].trim(),
                     profit: profit,
-                    // Added .trim() to prevent Windows \r carriage returns from breaking badges
                     result: (cols[7] || '-').trim() 
                 };
 
-                // Only add trade if time is valid to prevent chart crashes
                 if (!isNaN(new Date(trade.exitTime))) {
                     allTrades.push(trade);
                     totalProfit += profit;
@@ -2242,7 +2237,6 @@
                 }
             });
 
-            // Create cumulative profit history
             const sortedTradesForHistory = [...allTrades].sort((a, b) => new Date(a.exitTime) - new Date(b.exitTime));
             let runningProfit = 0;
             cumulativeProfitHistory = sortedTradesForHistory.map(trade => {
@@ -2272,12 +2266,10 @@
             
             renderVisualCalendar();
             
-            // Safely call setChartPeriod to update the chart
             try {
                 setChartPeriod(currentChartPeriod);
             } catch (e) {
                 console.error("Chart Error:", e);
-                // Swallow chart error so table doesn't crash
             }
 
             previousMetrics.totalProfit = totalProfit;
@@ -2405,35 +2397,60 @@
 
         function processSignalData(data) {
             const rows = data.split('\n').filter(r => r.trim() !== '');
-            const dataRows = rows[0].includes('Time') ? rows.slice(1) : rows;
+            // Safely check for headers in case the file is completely empty
+            const dataRows = rows.length > 0 && rows[0].includes('Time') ? rows.slice(1) : rows;
 
             const tbody = document.getElementById('signal-history-body');
             tbody.innerHTML = '';
             
             document.getElementById('active-signals').textContent = dataRows.length;
+            const alertBox = document.getElementById('signal-alert');
 
+            // 1. Handle the Yellow Alert Box
             if (dataRows.length > 0) {
                 const latest = dataRows[0].split(',');
                 if (latest.length >= 7) {
-                    const alertBox = document.getElementById('signal-alert');
-                    alertBox.style.display = 'block';
-                    
+                    if (alertBox.style.display === 'none' || alertBox.style.display === '') {
+                        alertBox.style.display = 'block';
+                        alertBox.style.animation = 'fadeIn 0.5s ease-out';
+                    }
                     document.getElementById('sig-symbol').textContent = latest[1];
                     document.getElementById('sig-direction').textContent = latest[2];
                     document.getElementById('sig-entry').textContent = latest[3];
                     document.getElementById('sig-sl').textContent = latest[4];
                     document.getElementById('sig-tp').textContent = latest[5];
                     document.getElementById('sig-conf').textContent = latest[6];
-                    
                     document.getElementById('sig-meta').innerText = `Detected at ${latest[0]}`;
                 }
+            } else {
+                alertBox.style.display = 'none'; 
             }
 
+            // 2. Handle the Empty State gracefully
+            if (dataRows.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="7">
+                            <div class="empty-state" style="padding: 40px 20px;">
+                                <i class="fas fa-satellite-dish" style="animation: pulse 2s infinite;"></i>
+                                <h3>No Active Signals</h3>
+                                <p>Sentinel AI Neural Network is currently scanning the markets for opportunities...</p>
+                            </div>
+                        </td>
+                    </tr>`;
+                return; // Stop here since there are no rows to draw
+            }
+
+            // 3. Draw the table rows with a staggered sliding animation
             dataRows.slice(0, 10).forEach((row, i) => {
                 const cols = row.split(',');
                 if(cols.length < 7) return;
 
                 const tr = document.createElement('tr');
+                
+                // Add the cascading animation (0.05s delay between each row)
+                tr.style.animation = `fadeInRow 0.4s ease-out ${i * 0.05}s both`;
+                
                 const typeColor = cols[2].includes('BUY') ? 'var(--success)' : 'var(--danger)';
                 
                 tr.innerHTML = `
@@ -2448,7 +2465,7 @@
                 tbody.appendChild(tr);
             });
         }
-
+        
         function calculateAccuracy() {
             if (allTrades.length === 0) return;
             
